@@ -321,10 +321,9 @@ wheels = [
 
 [[package]]
 name = "easier-data"
-version = "0.1.0"
+version = "0.1.1"
 source = { virtual = "." }
 dependencies = [
-    { name = "black", extra = ["jupyter"] },
     { name = "ipykernel" },
     { name = "jupyter" },
     { name = "matplotlib" },
@@ -333,9 +332,13 @@ dependencies = [
     { name = "seaborn" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "black", extra = ["jupyter"] },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "black", extras = ["jupyter"], specifier = ">=25.1.0" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "matplotlib", specifier = ">=3.10.3" },
@@ -345,7 +348,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = []
+dev = [{ name = "black", extras = ["jupyter"], specifier = ">=25.1.0" }]
 
 [[package]]
 name = "executing"

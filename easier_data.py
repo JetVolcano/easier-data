@@ -18,30 +18,31 @@ class DataSet:
     @property
     def mean(self) -> float:
         return stats.mean(self.__data)
-    
+
     @property
     def median(self) -> float:
         return stats.median(self.__data)
-    
+
     @property
     def quantiles(self) -> list[float]:
         return stats.quantiles(self.__data)
-    
+
     @property
     def q1(self) -> float:
         return self.quantiles[0]
-    
+
     @property
     def q3(self) -> float:
         return self.quantiles[2]
-    
+
     @property
     def iqr(self) -> float:
-        return self.q3-self.q1
-    
+        return self.q3 - self.q1
+
     @property
     def stdev(self) -> float:
         return stats.stdev(self.__data)
+
 
 class Array1D:
     def __init__(self, x: list[Any] | deque[Any]) -> None:
@@ -80,7 +81,7 @@ class Array2D:
 
     def bar(self) -> matplotlib.container.BarContainer:
         return self.ax.bar(self.x, self.y)
-    
+
     def boxplot(self) -> dict[str, Any]:
         return self.ax.boxplot([self.x, self.y])
 
