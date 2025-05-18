@@ -42,6 +42,10 @@ class DataSet:
     @property
     def stdev(self) -> float:
         return stats.stdev(self.__data)
+    
+    @property
+    def mad(self) -> float:
+        return stats.mean([abs(val-self.mean) for val in self.__data])
 
 
 class Array1D:
@@ -84,8 +88,3 @@ class Array2D:
 
     def boxplot(self) -> dict[str, Any]:
         return self.ax.boxplot([self.x, self.y])
-
-
-Array: Array2D = Array2D([2, 3, 5], [9, 6, 4])
-Array.plot()
-plot.show()
