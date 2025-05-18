@@ -39,6 +39,9 @@ class DataSet:
     def iqr(self) -> float:
         return self.q3-self.q1
     
+    @property
+    def stdev(self) -> float:
+        return stats.stdev(self.__data)
 
 class Array1D:
     def __init__(self, x: list[Any] | deque[Any]) -> None:
