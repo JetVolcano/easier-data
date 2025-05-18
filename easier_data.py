@@ -80,3 +80,11 @@ class Array2D:
 
     def bar(self) -> matplotlib.container.BarContainer:
         return self.ax.bar(self.x, self.y)
+    
+    def boxplot(self) -> dict[str, Any]:
+        return self.ax.boxplot([self.x, self.y])
+
+
+Array: Array2D = Array2D([2, 3, 5], [9, 6, 4])
+Array.plot()
+plot.show()
