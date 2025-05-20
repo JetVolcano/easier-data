@@ -3,7 +3,6 @@ import matplotlib.container
 import matplotlib.pyplot as plot
 import matplotlib.lines
 import numpy
-import statistics as stats
 from collections import deque
 from typing import Any
 

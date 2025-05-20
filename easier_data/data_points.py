@@ -1,12 +1,22 @@
 import statistics as stats
+import matplotlib.axes
+import matplotlib.container
+import matplotlib.pyplot as plot
+import matplotlib.lines
 from collections import deque
 from collections.abc import Iterable
 from numbers import Number
+from typing import Any
 
 
 class DataSet:
     def __init__(self, data: list[Number] | deque[Number]) -> None:
         self.__data: deque[Number] = deque(data)
+        self.fig, self.ax = plot.subplots()
+        self.set_xlabel = self.ax.set_xlabel
+        self.set_ylabel = self.ax.set_ylabel
+        self.set_xlabel("x")
+        self.set_ylabel("y")
 
     def __repr__(self) -> str:
         return f"DataSet(data={self.__data})"
@@ -49,3 +59,9 @@ class DataSet:
 
     def mad(self) -> float:
         return stats.mean([abs(val - self.mean) for val in self.__data])
+
+    def plot(self) -> matplotlib.lines.Line2D:
+        return self.ax.plot(self.__data)
+
+    def boxplot(self) -> dict[str, Any]:
+        return self.ax.boxplot(self.__data)
