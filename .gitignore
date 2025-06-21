@@ -9,5 +9,5 @@ wheels/
 # Virtual environments
 .venv
 
-# Jupyter Notebooks
-plotting.ipynb
+# Linter Cache
+.ruff_cache/
