@@ -11,3 +11,6 @@ wheels/
 
 # Linter Cache
 .ruff_cache/
+
+# Notebooks
+testing.ipynb
