@@ -1,7 +1,7 @@
 [project]
 name = "easier-data"
 version = "1.0.0"
-description = "Add your description here"
+description = "Python package for managing data and plotting easier"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
