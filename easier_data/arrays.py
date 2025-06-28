@@ -1,13 +1,16 @@
-import matplotlib.pyplot as plt
-import statistics as stats
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from matplotlib.collections import PathCollection
+from matplotlib.colors import Colormap
 from matplotlib.container import BarContainer
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from matplotlib.typing import ColorType, MarkerType
 from numbers import Real
 from pathlib import Path
 from typing import TypeVar, Any
+import matplotlib.pyplot as plt
+import statistics as stats
 
 
 T = TypeVar("T")
@@ -300,6 +303,28 @@ class Array2D:
         """
         return self.__ax.plot(self.__x, self.__y)
 
+    def scatter(
+        self,
+        s: ArrayLike[Real] | float | None = ...,
+        c: ArrayLike | ColorType | Sequence[ColorType] | None = None,
+        marker: MarkerType | None = None,
+        cmap: str | Colormap | None = None,
+        alpha: float | None = None,
+    ) -> PathCollection:
+        """
+        Returns a scatter plot of the array
+
+        :param s: Size of the marker
+        :param marker: The marker of the plot
+        :param cmap: The colormap to plot
+        :param alpha: The alpha of all the markers
+
+        :returntype PathCollection:
+        """
+        return self.__ax.scatter(
+            self.__x, self.__y, s, c, marker=marker, alpha=alpha, cmap=cmap
+        )
+
     def bar(self) -> BarContainer:
         """
         Make a bar plot of the array
@@ -383,30 +408,76 @@ class Array3D:
         self.__x: ArrayLike[Real] = deque(x)
         self.__y: ArrayLike[Real] = deque(y)
         self.__z: ArrayLike[Real] = deque(z)
+        self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     def x(self) -> ArrayLike[Real]:
+        """
+        Returns the data of x
+
+        :returntype ArrayLike[Real]:
+        """
+
         return self.__x
 
     def y(self) -> ArrayLike[Real]:
+        """
+        Returns the data of y
+
+        :returntype ArrayLike[Real]:
+        """
         return self.__y
 
     def z(self) -> ArrayLike[Real]:
+        """
+        Returns the data of z
+
+        :returntype ArrayLike[Real]:
+        """
         return self.__z
 
     def data(self) -> dict[ArrayLike[Real], ArrayLike[Real], ArrayLike[Real]]:
+        """
+        Returns a dict containing the x, y, and z values
+
+        :returntype dict[ArrayLike[Real], ArrayLike[Real]]
+        """
+
         return {"x": self.__x, "y": self.__y, "z": self.__z}
 
     def append(self, x: Real, y: Real, z: Real) -> None:
+        """
+        Append values to the x, y, and z posistions
+
+        :param x: The value to append to the x posistion
+        :param y: The value to append to the y posistion
+        :param z: The value to append to the z posistion
+        :returntype None:
+        """
         self.__x.append(x)
         self.__y.append(y)
         self.__z.append(z)
 
     def appendleft(self, x: Real, y: Real, z: Real) -> None:
+        """
+        Append values to the left of the x, y, and z posistions
+
+        :param x: The value to append to the left of the x posistion
+        :param y: The value to append to the left of the y posistion
+        :param z: The value to append to the left of the z posistion
+        """
         self.__x.appendleft(x)
         self.__y.appendleft(y)
         self.__z.appendleft(z)
 
     def extend(self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]) -> None:
+        """
+        Extend an iterable the x, y, and z posistions
+
+        :param x: The iterable to extend to the x posistion
+        :param y: The iterable to extend to the y posistion
+        :param z: The iterable to extend to the z posistion
+        :returntype None:
+        """
         self.__x.extend(x)
         self.__y.extend(y)
         self.__z.extend(z)
@@ -414,6 +485,69 @@ class Array3D:
     def extendleft(
         self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]
     ) -> None:
+        """
+        Extend an iterable the left of the x, y, and z posistions
+
+        :param x: The iterable to extend to the left of the x posistion
+        :param y: The iterable to extend to the left of the y posistion
+        :param z: The iterable to extend to the left of the z posistion
+        :returntype None:
+        """
         self.__x.extendleft(x)
         self.__y.extendleft(y)
         self.__z.extendleft(z)
+
+    def save(
+        self,
+        dir: str | Path | None = None,
+        suffix: str = "svg",
+        *,
+        transparent: bool | None = None,
+    ) -> None:
+        """
+        :param dir: A directory to the path that the figure will be saved
+        :param suffix: The suffix for the saved figure
+        :param transparent: Wether or not the figure will be transparent
+        :returntype None:
+        """
+        formats: deque[str] = deque(
+            (
+                "eps",
+                "jpeg",
+                "jpg",
+                "pdf",
+                "pgf",
+                "png",
+                "ps",
+                "raw",
+                "rgba",
+                "svg",
+                "svgz",
+                "tif",
+                "tiff",
+                "webp",
+            )
+        )
+        if suffix not in formats:
+            raise ValueError(
+                f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
+            )
+        figure: Figure = ...
+        number: str | int = ...
+        filename: str = f"figure_1.{suffix}"
+        if dir is None:
+            dir = Path(".\\figures\\")
+        if isinstance(dir, str):
+            dir = Path(dir)
+        if not dir.exists():
+            dir.mkdir()
+        while Path(f"{dir.absolute().__str__()}\\{filename}").exists():
+            figure, number, suffix = (
+                filename.split("_")[0],
+                filename.split("_")[1].split(".")[0],
+                filename.split("_")[1].split(".")[1],
+            )
+            number = int(number) + 1
+            filename = f"{figure}_{number}.{suffix}"
+        path: Path = Path(dir.absolute().__str__() + "\\" + filename)
+        self.__fig.savefig(path, transparent=transparent)
