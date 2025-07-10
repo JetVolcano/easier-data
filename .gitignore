@@ -14,3 +14,6 @@ wheels/
 
 # Notebooks
 testing.ipynb
+
+# IDE Configs
+.vscode/
