@@ -16,4 +16,6 @@ wheels/
 testing.ipynb
 
 # IDE Configs
+.fleet/
+.idea/
 .vscode/
