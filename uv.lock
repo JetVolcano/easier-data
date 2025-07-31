@@ -4,14 +4,15 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "accurate-benchmark"
-version = "1.1.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "numpy" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/f2/ca85a2d9cafc155cdc766ec8d01b6bdd996315d64eeaf61a4748c5c5d8a5/accurate_benchmark-1.1.0.tar.gz", hash = "sha256:027b548d0095edfdeea3d194eb960858ee77de790cbd03bfdcf80fab0e46e12d", size = 2224, upload-time = "2025-06-27T19:46:07.888Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/41/cea7a451286e1fb6da2dcde0b048e44f64f6761d042bb02949b22a8f21e4/accurate_benchmark-2.0.0.tar.gz", hash = "sha256:2681e0eee64ce2a12c0c271fdd6b3dcbc37daacb294580b4c5209d4b2ad3fb31", size = 6698, upload-time = "2025-07-26T03:37:19.29Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/aa/db38629bd7d7a07f900d86f59b9d4f98f19b80c85f168e72ce5f1b69868c/accurate_benchmark-1.1.0-py3-none-any.whl", hash = "sha256:cb04025319fe44a19e8664978c3984ff2956603239a664a83f88dd3ecc469fea", size = 2743, upload-time = "2025-06-27T19:46:06.63Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/7a/59a7d34877a17d5be5137c7e9cc0a87350b1d6b5ffb99ddf4d3768b30749/accurate_benchmark-2.0.0-py3-none-any.whl", hash = "sha256:e756480e5fab7782c22a5e65568d4518c64f109b3cbd27cff52fcbba4e167b2e", size = 7369, upload-time = "2025-07-26T03:37:18.246Z" },
 ]
 
 [[package]]
