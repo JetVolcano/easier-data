@@ -1,3 +1,0 @@
-[lint.isort]
-lines-after-imports = 2
-order-by-type = true
