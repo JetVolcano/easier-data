@@ -1,21 +1,26 @@
+from __future__ import annotations
+
 from collections import deque
 from collections.abc import Iterable, Sequence
+from numbers import Real
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar
+
+import matplotlib.pyplot as plt
+import numpy as np
+from filelock import FileLock
 from matplotlib.collections import PathCollection
 from matplotlib.colors import Colormap
 from matplotlib.container import BarContainer
-from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.typing import ColorType, MarkerType
-from numbers import Real
-from pathlib import Path
-from typing import TypeVar, Any
-import matplotlib.pyplot as plt
-import statistics as stats
+from scipy import stats
+
+from ._types import ArrayLike
 
 
-T = TypeVar("T")
-
-type ArrayLike[T] = list[T] | tuple[T, ...] | deque[T]
+if TYPE_CHECKING:
+    from scipy.stats._result_classes import ModeResult
 
 
 class Array1D:
@@ -23,15 +28,52 @@ class Array1D:
     1 Dimensional Array meant for 1 Dimensional Data
     """
 
+    __hash__: ClassVar[None] = None
+
     def __init__(self, data: ArrayLike[Real]) -> None:
-        self.__data: ArrayLike[Real] = deque(data)
+        self.__data: np.ndarray = np.array(data)
         self.__fig, self.__ax = plt.subplots()
 
-    def data(self) -> ArrayLike[Real]:
+    def __repr__(self) -> str:
+        """
+        Returns the representation of the 1 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array1D(data={self.__data!r})"
+
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the 1 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array1D({self.__data!r})"
+
+    def __eq__(self, other: Array1D) -> Any:
+        return self.__data == other.__data
+
+    def __ne__(self, other: Array1D) -> Any:
+        return self.__data != other.__data
+
+    def __gt__(self, other: Array1D) -> Any:
+        return self.__data > other.__data
+
+    def __ge__(self, other: Array1D) -> Any:
+        return self.__data >= other.__data
+
+    def __lt__(self, other: Array1D) -> Any:
+        return self.__data < other.__data
+
+    def __le__(self, other: Array1D) -> Any:
+        return self.__data <= other.__data
+
+    @property
+    def data(self) -> np.ndarray:
         """
         Returns the data from the array
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
         return self.__data
 
@@ -42,7 +84,7 @@ class Array1D:
         :param obj: The object to append
         :returntype None:
         """
-        self.__data.append(obj)
+        self.__data = np.append(self.__data, obj)
 
     def appendleft(self, x: Real, /) -> None:
         """
@@ -51,7 +93,7 @@ class Array1D:
         :param x: The object to append
         :returntype None:
         """
-        self.__data.appendleft(x)
+        self.__data = np.insert(self.__data, 0, x)
 
     def extend(self, iterable: Iterable[Real], /) -> None:
         """
@@ -60,7 +102,7 @@ class Array1D:
         :param iterable: The iterable to extend
         :returntype None:
         """
-        self.__data.extend(iterable)
+        self.__data = np.concatenate((self.__data, iterable))
 
     def extendleft(self, iterable: Iterable[Real], /) -> None:
         """
@@ -69,7 +111,7 @@ class Array1D:
         :param iterable: The iterable to extend
         :returntype None:
         """
-        self.__data.extendleft(iterable)
+        self.__data = np.concatenate((iterable[::-1], self.__data))
 
     def plot(self) -> list[Line2D]:
         """
@@ -85,7 +127,7 @@ class Array1D:
 
         :returntype BarContainer:
         """
-        return self.__ax.bar(self.__data, range(len(self.__data)))
+        return self.__ax.bar(range(len(self.__data)), self.__data)
 
     def boxplot(self) -> dict[str, Any]:
         """
@@ -114,6 +156,7 @@ class Array1D:
         :param dir: A directory to the path that the figure will be saved
         :param suffix: The suffix for the saved figure
         :param transparent: Wether or not the figure will be transparent
+
         :returntype None:
         """
         formats: deque[str] = deque(
@@ -138,7 +181,6 @@ class Array1D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        figure: Figure = ...
         number: str | int = ...
         filename: str = f"figure_1.{suffix}"
         if dir is None:
@@ -147,16 +189,15 @@ class Array1D:
             dir = Path(dir)
         if not dir.exists():
             dir.mkdir()
-        while Path(f"{dir.absolute().__str__()}\\{filename}").exists():
-            figure, number, suffix = (
-                filename.split("_")[0],
-                filename.split("_")[1].split(".")[0],
-                filename.split("_")[1].split(".")[1],
-            )
-            number = int(number) + 1
-            filename = f"{figure}_{number}.{suffix}"
-        path: Path = Path(dir.absolute().__str__() + "\\" + filename)
-        self.__fig.savefig(path, transparent=transparent)
+
+        lock_path = dir / "save.lock"
+        with FileLock(str(lock_path)):
+            number: int = 1
+            while (dir / f"figure_{number}.{suffix}").exists():
+                number += 1
+            filename = f"figure_{number}.{suffix}"
+            path = dir / filename
+            self.__fig.savefig(path, transparent=transparent)
 
     def mean(self) -> Real:
         """
@@ -164,7 +205,7 @@ class Array1D:
 
         :returntype Real:
         """
-        return stats.mean(self.__data)
+        return self.__data.mean()
 
     def avg(self) -> Real:
         """
@@ -180,15 +221,39 @@ class Array1D:
 
         :returntype Real:
         """
-        return stats.median(self.__data)
+        return np.median(self.__data)
 
-    def quantiles(self) -> deque[Real]:
+    def mode(self) -> ModeResult:
+        """
+        Returns the mode of the data in the array
+
+        :returntype ModeResult:
+        """
+        return stats.mode(self.__data)
+
+    def std(self) -> Real:
+        """
+        Returns the standard deviation of the data in the array
+
+        :returntype Real:
+        """
+        return self.data.std()
+
+    def stddev(self) -> Real:
+        """
+        Returns the standard deviation of the data in the array
+
+        :returntype Real:
+        """
+        return self.data.std()
+
+    def quantiles(self) -> np.floating[Any]:
         """
         Returns the quantiles of the data in the array
 
-        :returntype deque[Real]:
+        :returntype floating[Any]:
         """
-        return deque(stats.quantiles(self.__data))
+        return np.quantile(self.__data, [0.25, 0.5, 0.75])
 
     def q1(self) -> Real:
         """
@@ -220,19 +285,57 @@ class Array2D:
     2 Dimensional Array meant for 2 Dimensional Data
     """
 
+    __hash__: ClassVar[None] = None
+
     def __init__(self, x: ArrayLike[Real], y: ArrayLike[Real]) -> None:
-        self.__x: ArrayLike[Real] = deque(x)
-        self.__y: ArrayLike[Real] = deque(y)
+        self.__x: np.ndarray = np.array(x)
+        self.__y: np.ndarray = np.array(y)
         self.__fig, self.__ax = plt.subplots()
 
-    def x(self) -> ArrayLike[Real]:
+    def __repr__(self) -> str:
+        """
+        Returns the representation of the 2 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array2D(x={self.__x!r}, y={self.__y!r})"
+
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the 2 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array2D({self.__x!r}, {self.__y!r})"
+
+    def __eq__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) == np.array([other.__x, other.__y])
+
+    def __ne__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) != np.array([other.__x, other.__y])
+
+    def __gt__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) > np.array([other.__x, other.__y])
+
+    def __ge__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) >= np.array([other.__x, other.__y])
+
+    def __lt__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) < np.array([other.__x, other.__y])
+
+    def __le__(self, other: Array2D) -> Any:
+        return np.array([self.__x, self.__y]) <= np.array([other.__x, other.__y])
+
+    @property
+    def x(self) -> np.ndarray:
         """
         Returns the data of x
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
         return self.__x
 
+    @property
     def y(self) -> ArrayLike[Real]:
         """
         Returns the data of y
@@ -241,11 +344,12 @@ class Array2D:
         """
         return self.__y
 
-    def data(self) -> dict[ArrayLike[Real], ArrayLike[Real]]:
+    @property
+    def data(self) -> dict[str, np.ndarray]:
         """
         Returns a dict containing the x and y values
 
-        :returntype dict[ArrayLike[Real], ArrayLike[Real]]
+        :returntype dict[str, np.ndarray]
         """
 
         return {"x": self.__x, "y": self.__y}
@@ -256,10 +360,11 @@ class Array2D:
 
         :param x: The value to append to the x posistion
         :param y: The value to append to the y posistion
+
         :returntype None:
         """
-        self.__x.append(x)
-        self.__y.append(y)
+        self.__x = np.append(self.__x, x)
+        self.__y = np.append(self.__y, y)
 
     def appendleft(self, x: Real, y: Real) -> None:
         """
@@ -267,11 +372,12 @@ class Array2D:
 
         :param x: The value to append to the left of the x posistion
         :param y: The value to append to the left of the y posistion
+
         :returntype None:
         """
 
-        self.__x.appendleft(x)
-        self.__y.appendleft(y)
+        self.__x = np.insert(self.__x, 0, x)
+        self.__y = np.insert(self.__y, 0, y)
 
     def extend(self, x: Iterable[Real], y: Iterable[Real]) -> None:
         """
@@ -281,8 +387,8 @@ class Array2D:
         :param y: The iterable to extend to the y posistion
         :returntype None:
         """
-        self.__x.extend(x)
-        self.__y.extend(y)
+        self.__x = np.concatenate((self.__x, x))
+        self.__y = np.concatenate((self.__y, y))
 
     def extendleft(self, x: Iterable[Real], y: Iterable[Real]) -> None:
         """
@@ -292,8 +398,8 @@ class Array2D:
         :param y: The iterable to extend to the left of the y posistion
         :returntype None:
         """
-        self.__x.extendleft(x)
-        self.__y.extendleft(y)
+        self.__x = np.concatenate((x[::-1], self.__x))
+        self.__y = np.concatenate((y[::-1], self.__y))
 
     def plot(self) -> list[Line2D]:
         """
@@ -321,6 +427,8 @@ class Array2D:
 
         :returntype PathCollection:
         """
+        if s is ...:
+            s = None
         return self.__ax.scatter(
             self.__x, self.__y, s, c, marker=marker, alpha=alpha, cmap=cmap
         )
@@ -376,7 +484,6 @@ class Array2D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        figure: Figure = ...
         number: str | int = ...
         filename: str = f"figure_1.{suffix}"
         if dir is None:
@@ -385,16 +492,15 @@ class Array2D:
             dir = Path(dir)
         if not dir.exists():
             dir.mkdir()
-        while Path(f"{dir.absolute().__str__()}\\{filename}").exists():
-            figure, number, suffix = (
-                filename.split("_")[0],
-                filename.split("_")[1].split(".")[0],
-                filename.split("_")[1].split(".")[1],
-            )
-            number = int(number) + 1
-            filename = f"{figure}_{number}.{suffix}"
-        path: Path = Path(dir.absolute().__str__() + "\\" + filename)
-        self.__fig.savefig(path, transparent=transparent)
+
+        lock_path = dir / "save.lock"
+        with FileLock(str(lock_path)):
+            number: int = 1
+            while (dir / f"figure_{number}.{suffix}").exists():
+                number += 1
+            filename = f"figure_{number}.{suffix}"
+            path = dir / filename
+            self.__fig.savefig(path, transparent=transparent)
 
 
 class Array3D:
@@ -405,43 +511,61 @@ class Array3D:
     def __init__(
         self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
     ) -> None:
-        self.__x: ArrayLike[Real] = deque(x)
-        self.__y: ArrayLike[Real] = deque(y)
-        self.__z: ArrayLike[Real] = deque(z)
+        self.__x: np.ndarray = np.array(x)
+        self.__y: np.ndarray = np.array(y)
+        self.__z: np.ndarray = np.array(z)
         self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    def x(self) -> ArrayLike[Real]:
+    def __repr__(self) -> str:
+        """
+        Returns the representation of the 3 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array3D(x={self.__x!r}, y={self.__y!r}, z={self.__z!r})"
+
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the 3 Dimensional Array
+
+        :returntype str:
+        """
+        return f"Array3D({self.__x!r}, {self.__y!r}, {self.__z!r})"
+
+    @property
+    def x(self) -> np.ndarray:
         """
         Returns the data of x
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
-
         return self.__x
 
-    def y(self) -> ArrayLike[Real]:
+    @property
+    def y(self) -> np.ndarray:
         """
         Returns the data of y
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
         return self.__y
 
-    def z(self) -> ArrayLike[Real]:
+    @property
+    def z(self) -> np.ndarray:
         """
         Returns the data of z
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
         return self.__z
 
-    def data(self) -> dict[ArrayLike[Real], ArrayLike[Real], ArrayLike[Real]]:
+    @property
+    def data(self) -> dict[str, np.ndarray]:
         """
         Returns a dict containing the x, y, and z values
 
-        :returntype dict[ArrayLike[Real], ArrayLike[Real]]
+        :returntype dict[str, np.ndarray]
         """
-
         return {"x": self.__x, "y": self.__y, "z": self.__z}
 
     def append(self, x: Real, y: Real, z: Real) -> None:
@@ -453,9 +577,9 @@ class Array3D:
         :param z: The value to append to the z posistion
         :returntype None:
         """
-        self.__x.append(x)
-        self.__y.append(y)
-        self.__z.append(z)
+        self.__x = np.append(self.__x, x)
+        self.__y = np.append(self.__y, y)
+        self.__z = np.append(self.__z, z)
 
     def appendleft(self, x: Real, y: Real, z: Real) -> None:
         """
@@ -465,9 +589,9 @@ class Array3D:
         :param y: The value to append to the left of the y posistion
         :param z: The value to append to the left of the z posistion
         """
-        self.__x.appendleft(x)
-        self.__y.appendleft(y)
-        self.__z.appendleft(z)
+        self.__x = np.insert(self.__x, 0, x)
+        self.__y = np.insert(self.__y, 0, y)
+        self.__z = np.insert(self.__z, 0, z)
 
     def extend(self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]) -> None:
         """
@@ -478,9 +602,9 @@ class Array3D:
         :param z: The iterable to extend to the z posistion
         :returntype None:
         """
-        self.__x.extend(x)
-        self.__y.extend(y)
-        self.__z.extend(z)
+        self.__x = np.concatenate((self.__x, x))
+        self.__y = np.concatenate((self.__y, y))
+        self.__z = np.concatenate((self.__z, z))
 
     def extendleft(
         self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]
@@ -493,9 +617,9 @@ class Array3D:
         :param z: The iterable to extend to the left of the z posistion
         :returntype None:
         """
-        self.__x.extendleft(x)
-        self.__y.extendleft(y)
-        self.__z.extendleft(z)
+        self.__x = np.concat((x[::-1], self.__x))
+        self.__y = np.concat((y[::-1], self.__y))
+        self.__z = np.concat((z[::-1], self.__z))
 
     def save(
         self,
@@ -532,7 +656,6 @@ class Array3D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        figure: Figure = ...
         number: str | int = ...
         filename: str = f"figure_1.{suffix}"
         if dir is None:
@@ -541,13 +664,12 @@ class Array3D:
             dir = Path(dir)
         if not dir.exists():
             dir.mkdir()
-        while Path(f"{dir.absolute().__str__()}\\{filename}").exists():
-            figure, number, suffix = (
-                filename.split("_")[0],
-                filename.split("_")[1].split(".")[0],
-                filename.split("_")[1].split(".")[1],
-            )
-            number = int(number) + 1
-            filename = f"{figure}_{number}.{suffix}"
-        path: Path = Path(dir.absolute().__str__() + "\\" + filename)
-        self.__fig.savefig(path, transparent=transparent)
+
+        lock_path = dir / "save.lock"
+        with FileLock(str(lock_path)):
+            number: int = 1
+            while (dir / f"figure_{number}.{suffix}").exists():
+                number += 1
+            filename = f"figure_{number}.{suffix}"
+            path = dir / filename
+            self.__fig.savefig(path, transparent=transparent)
