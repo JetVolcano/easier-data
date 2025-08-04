@@ -20,7 +20,7 @@ from ._types import ArrayLike
 
 
 if TYPE_CHECKING:
-    from scipy.stats._result_classes import ModeResult
+    from scipy.stats._stats_py import ModeResult
 
 
 class Array1D:
@@ -95,7 +95,7 @@ class Array1D:
         :returntype None:
         """
         self.__data = np.insert(self.__data, 0, x)
-
+ 
     def extend(self, iterable: Iterable[Real], /) -> None:
         """
         Extends an iterable to the array
