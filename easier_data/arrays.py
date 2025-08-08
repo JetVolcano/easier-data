@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 from matplotlib.typing import ColorType, MarkerType
 from scipy import stats
 
-from ._types import ArrayLike
+from ._types import ArrayLike, check_type
 
 
 if TYPE_CHECKING:
@@ -31,6 +31,8 @@ class Array1D:
     __hash__: ClassVar[None] = None
 
     def __init__(self, data: ArrayLike[Real]) -> None:
+        if not check_type(data, Real):
+            raise TypeError("Data only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
         self._type: type = type(data)
         self.__fig, self.__ax = plt.subplots()
@@ -95,7 +97,7 @@ class Array1D:
         :returntype None:
         """
         self.__data = np.insert(self.__data, 0, x)
- 
+
     def extend(self, iterable: Iterable[Real], /) -> None:
         """
         Extends an iterable to the array
@@ -289,6 +291,17 @@ class Array2D:
     __hash__: ClassVar[None] = None
 
     def __init__(self, x: ArrayLike[Real], y: ArrayLike[Real]) -> None:
+        x_exception: TypeError = TypeError("x must contain only real numbers")
+        y_exception: TypeError = TypeError("y must contain only real numbers")
+        exceptions: dict[TypeError, bool] = {
+            x_exception: not check_type(x, Real),
+            y_exception: not check_type(y, Real),
+        }
+        if any(exceptions.values()):
+            raise ExceptionGroup(
+                f"{sum(exceptions.values())} TypeError(s) occured",
+                [exception for exception in exceptions if exceptions[exception]],
+            )
         self.__x: np.ndarray = np.array(x)
         self._xtype: type = type(x)
         self.__y: np.ndarray = np.array(y)
@@ -301,7 +314,7 @@ class Array2D:
 
         :returntype str:
         """
-        return f"Array2D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}"
+        return f"Array2D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r})"
 
     def __str__(self) -> str:
         """
@@ -514,6 +527,19 @@ class Array3D:
     def __init__(
         self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
     ) -> None:
+        x_exception: TypeError = TypeError("x must contain only real numbers")
+        y_exception: TypeError = TypeError("y must contain only real numbers")
+        z_exception: TypeError = TypeError("z must contain only real numbers")
+        exceptions: dict[TypeError, bool] = {
+            x_exception: not check_type(x, Real),
+            y_exception: not check_type(y, Real),
+            z_exception: not check_type(z, Real),
+        }
+        if any(exceptions.values()):
+            raise ExceptionGroup(
+                f"{sum(exceptions.values())} TypeError(s) occured",
+                [exception for exception in exceptions if exceptions[exception]],
+            )
         self.__x: np.ndarray = np.array(x)
         self._xtype: type = type(x)
         self.__y: np.ndarray = np.array(y)
@@ -528,7 +554,7 @@ class Array3D:
 
         :returntype str:
         """
-        return f"Array3D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, z={self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r}"
+        return f"Array3D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, z={self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r})"
 
     def __str__(self) -> str:
         """
@@ -536,7 +562,7 @@ class Array3D:
 
         :returntype str:
         """
-        return f"Array3D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, {self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r}"
+        return f"Array3D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, {self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r})"
 
     @property
     def x(self) -> np.ndarray:
