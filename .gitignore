@@ -19,3 +19,6 @@ testing.ipynb
 .fleet/
 .idea/
 .vscode/
+
+# Custom Scripts
+scripts/
