@@ -116,11 +116,11 @@ class DataSet:
         return self.__data.std()
 
     @property
-    def quantiles(self) -> ArrayLike[Real]:
+    def quantiles(self) -> np.ndarray:
         """
         Returns the quantiles of the DataSet
 
-        :returntype ArrayLike[Real]:
+        :returntype np.ndarray:
         """
         return np.quantile(self.__data, [0.25, 0.5, 0.75])
 
@@ -192,7 +192,7 @@ class ComplexDataSet:
             raise TypeError("Data must contain only complex or real numbers.")
         self.__data: np.ndarray = np.array(data)
         self._type: type = type(data)
-        self.trim_mean: Final[Callable[[float, int | None], Real]] = partial(
+        self.trim_mean: Final[Callable[[float, int | None], Number]] = partial(
             stats.trim_mean, self.__data
         )
 
