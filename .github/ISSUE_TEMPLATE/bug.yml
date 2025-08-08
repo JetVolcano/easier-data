@@ -20,3 +20,7 @@ body:
     attributes:
       label: How do you reproduce the issue?
       description: Please describe the steps to reproduce the issue.
+  - type: textarea
+    attributes:
+      label: Extra information
+      
