@@ -1,5 +1,5 @@
 from collections import deque
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any, Final, Generic, TypeVar, overload
 
 import numpy as np
@@ -45,9 +45,6 @@ class ArrayLike(Generic[T], Sequence[T]):
 
 ArrayLike.register(list)
 ArrayLike.register(tuple)
-ArrayLike.register(set)
-ArrayLike.register(frozenset)
-ArrayLike.register(Iterator)
 ArrayLike.register(deque)
 ArrayLike.register(np.ndarray)
 
