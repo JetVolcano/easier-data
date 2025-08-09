@@ -53,7 +53,7 @@ class DataSet:
         return self.__data > other.__data
 
     def __ge__(self, other: DataSet) -> Any:
-        return self.__data >= other.data
+        return self.__data >= other.__data
 
     def __lt__(self, other: DataSet) -> Any:
         return self.__data < other.__data
@@ -181,7 +181,7 @@ class DataSet:
 
         :param iterable: The iterable to extend
         """
-        self.__data = np.concatenate((iterable[::-1], self.__data))
+        self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))
 
 
 class ComplexDataSet:
@@ -314,4 +314,4 @@ class ComplexDataSet:
 
         :param iterable: The iterable to extend
         """
-        self.__data = np.concatenate((iterable[::-1], self.__data))
+        self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))

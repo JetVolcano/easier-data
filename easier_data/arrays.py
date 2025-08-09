@@ -32,7 +32,7 @@ class Array1D:
 
     def __init__(self, data: ArrayLike[Real]) -> None:
         if not check_type(data, Real):
-            raise TypeError("Data only contain real numbers.")
+            raise TypeError("Data must only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
         self._type: type = type(data)
         self.__fig, self.__ax = plt.subplots()
@@ -114,7 +114,7 @@ class Array1D:
         :param iterable: The iterable to extend
         :returntype None:
         """
-        self.__data = np.concatenate((iterable[::-1], self.__data))
+        self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))
 
     def plot(self) -> list[Line2D]:
         """
@@ -158,7 +158,7 @@ class Array1D:
         """
         :param dir: A directory to the path that the figure will be saved
         :param suffix: The suffix for the saved figure
-        :param transparent: Wether or not the figure will be transparent
+        :param transparent: Whether or not the figure will be transparent
 
         :returntype None:
         """
@@ -299,7 +299,7 @@ class Array2D:
         }
         if any(exceptions.values()):
             raise ExceptionGroup(
-                f"{sum(exceptions.values())} TypeError(s) occured",
+                f"{sum(exceptions.values())} TypeError(s) occurred",
                 [exception for exception in exceptions if exceptions[exception]],
             )
         self.__x: np.ndarray = np.array(x)
@@ -352,11 +352,11 @@ class Array2D:
         return self.__x
 
     @property
-    def y(self) -> ArrayLike[Real]:
+    def y(self) -> np.ndarray:
         """
         Returns the data of y
 
-        :returntype ArrayLike[Real]
+        :returntype np.ndarray:
         """
         return self.__y
 
@@ -384,10 +384,10 @@ class Array2D:
 
     def appendleft(self, x: Real, y: Real) -> None:
         """
-        Append values to left of both x and y posistions
+        Append values to left of both x and y positions
 
-        :param x: The value to append to the left of the x posistion
-        :param y: The value to append to the left of the y posistion
+        :param x: The value to append to the left of the x position
+        :param y: The value to append to the left of the y position
 
         :returntype None:
         """
@@ -397,10 +397,10 @@ class Array2D:
 
     def extend(self, x: Iterable[Real], y: Iterable[Real]) -> None:
         """
-        Extend an iterable both the x and y posistions
+        Extend an iterable both the x and y positions
 
-        :param x: The iterable to extend to the x posistion
-        :param y: The iterable to extend to the y posistion
+        :param x: The iterable to extend to the x position
+        :param y: The iterable to extend to the y position
         :returntype None:
         """
         self.__x = np.concatenate((self.__x, x))
@@ -408,14 +408,14 @@ class Array2D:
 
     def extendleft(self, x: Iterable[Real], y: Iterable[Real]) -> None:
         """
-        Extend an iterable to left of both x and y posistions
+        Extend an iterable to left of both x and y positions
 
-        :param x: The iterable to extend to the left of the x posistion
-        :param y: The iterable to extend to the left of the y posistion
+        :param x: The iterable to extend to the left of the x position
+        :param y: The iterable to extend to the left of the y position
         :returntype None:
         """
-        self.__x = np.concatenate((x[::-1], self.__x))
-        self.__y = np.concatenate((y[::-1], self.__y))
+        self.__x = np.concatenate((np.array(x)[::-1], self.__x))
+        self.__y = np.concatenate((np.array(y)[::-1], self.__y))
 
     def plot(self) -> list[Line2D]:
         """
@@ -475,7 +475,7 @@ class Array2D:
         """
         :param dir: A directory to the path that the figure will be saved
         :param suffix: The suffix for the saved figure
-        :param transparent: Wether or not the figure will be transparent
+        :param transparent: Whether or not the figure will be transparent
         :returntype None:
         """
         formats: deque[str] = deque(
@@ -524,6 +524,8 @@ class Array3D:
     3 Dimensional Array meant for 3 Dimensional Data
     """
 
+    __hash__: ClassVar[None] = None
+
     def __init__(
         self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
     ) -> None:
@@ -537,7 +539,7 @@ class Array3D:
         }
         if any(exceptions.values()):
             raise ExceptionGroup(
-                f"{sum(exceptions.values())} TypeError(s) occured",
+                f"{sum(exceptions.values())} TypeError(s) occurred",
                 [exception for exception in exceptions if exceptions[exception]],
             )
         self.__x: np.ndarray = np.array(x)
@@ -554,7 +556,7 @@ class Array3D:
 
         :returntype str:
         """
-        return f"Array3D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, z={self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r})"
+        return f"Array3D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, z={self._ztype(self.__z) if self._ztype != np.ndarray else self.__z!r})"
 
     def __str__(self) -> str:
         """
@@ -562,7 +564,7 @@ class Array3D:
 
         :returntype str:
         """
-        return f"Array3D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, {self._ytype(self.__z) if self._ytype != np.ndarray else self.__z!r})"
+        return f"Array3D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, {self._ztype(self.__z) if self._ztype != np.ndarray else self.__z!r})"
 
     @property
     def x(self) -> np.ndarray:
@@ -602,11 +604,11 @@ class Array3D:
 
     def append(self, x: Real, y: Real, z: Real) -> None:
         """
-        Append values to the x, y, and z posistions
+        Append values to the x, y, and z posisions
 
-        :param x: The value to append to the x posistion
-        :param y: The value to append to the y posistion
-        :param z: The value to append to the z posistion
+        :param x: The value to append to the x position
+        :param y: The value to append to the y position
+        :param z: The value to append to the z position
         :returntype None:
         """
         self.__x = np.append(self.__x, x)
@@ -615,11 +617,11 @@ class Array3D:
 
     def appendleft(self, x: Real, y: Real, z: Real) -> None:
         """
-        Append values to the left of the x, y, and z posistions
+        Append values to the left of the x, y, and z positions
 
-        :param x: The value to append to the left of the x posistion
-        :param y: The value to append to the left of the y posistion
-        :param z: The value to append to the left of the z posistion
+        :param x: The value to append to the left of the x position
+        :param y: The value to append to the left of the y position
+        :param z: The value to append to the left of the z position
         """
         self.__x = np.insert(self.__x, 0, x)
         self.__y = np.insert(self.__y, 0, y)
@@ -627,11 +629,11 @@ class Array3D:
 
     def extend(self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]) -> None:
         """
-        Extend an iterable the x, y, and z posistions
+        Extend an iterable the x, y, and z positions
 
-        :param x: The iterable to extend to the x posistion
-        :param y: The iterable to extend to the y posistion
-        :param z: The iterable to extend to the z posistion
+        :param x: The iterable to extend to the x position
+        :param y: The iterable to extend to the y position
+        :param z: The iterable to extend to the z position
         :returntype None:
         """
         self.__x = np.concatenate((self.__x, x))
@@ -642,16 +644,16 @@ class Array3D:
         self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]
     ) -> None:
         """
-        Extend an iterable the left of the x, y, and z posistions
+        Extend an iterable the left of the x, y, and z positions
 
-        :param x: The iterable to extend to the left of the x posistion
-        :param y: The iterable to extend to the left of the y posistion
-        :param z: The iterable to extend to the left of the z posistion
+        :param x: The iterable to extend to the left of the x position
+        :param y: The iterable to extend to the left of the y position
+        :param z: The iterable to extend to the left of the z position
         :returntype None:
         """
-        self.__x = np.concat((x[::-1], self.__x))
-        self.__y = np.concat((y[::-1], self.__y))
-        self.__z = np.concat((z[::-1], self.__z))
+        self.__x = np.concatenate((np.array(x)[::-1], self.__x))
+        self.__y = np.concatenate((np.array(y)[::-1], self.__y))
+        self.__z = np.concatenate((np.array(z)[::-1], self.__z))
 
     def save(
         self,
@@ -663,7 +665,7 @@ class Array3D:
         """
         :param dir: A directory to the path that the figure will be saved
         :param suffix: The suffix for the saved figure
-        :param transparent: Wether or not the figure will be transparent
+        :param transparent: Whether or not the figure will be transparent
         :returntype None:
         """
         formats: deque[str] = deque(

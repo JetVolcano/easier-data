@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from numbers import Real
+from typing import Final
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,8 +10,8 @@ from matplotlib.pyplot import show
 from .arrays import Array1D, Array2D
 
 
-_EXPECTED_1D_ARRAY_LEN: int = 1
-_EXPECTED_2D_ARRAY_LEN: int = 2
+_EXPECTED_1D_ARRAY_LEN: Final[int] = 1
+_EXPECTED_2D_ARRAY_LEN: Final[int] = 2
 
 
 def plot(
