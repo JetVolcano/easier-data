@@ -19,6 +19,8 @@ class DataSet:
     __hash__: ClassVar[None] = None
 
     def __init__(self, data: ArrayLike[Real]) -> None:
+        if len(data) == 0:
+            raise ValueError("Data cannot be empty.")
         if not check_type(data, Real):
             raise TypeError("Data must only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
@@ -188,6 +190,8 @@ class ComplexDataSet:
     __hash__: ClassVar[None] = None
 
     def __init__(self, data: ArrayLike[Number]) -> None:
+        if len(data) == 0:
+            raise ValueError("Data cannot be empty.")
         if not check_type(data, Number):
             raise TypeError("Data must contain only complex or real numbers.")
         self.__data: np.ndarray = np.array(data)

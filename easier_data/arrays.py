@@ -31,6 +31,8 @@ class Array1D:
     __hash__: ClassVar[None] = None
 
     def __init__(self, data: ArrayLike[Real]) -> None:
+        if len(data) == 0:
+            raise ValueError("Data cannot be empty.")
         if not check_type(data, Real):
             raise TypeError("Data must only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
@@ -159,7 +161,6 @@ class Array1D:
         :param dir: A directory to the path that the figure will be saved
         :param suffix: The suffix for the saved figure
         :param transparent: Whether or not the figure will be transparent
-
         :returntype None:
         """
         formats: deque[str] = deque(
@@ -184,7 +185,7 @@ class Array1D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        number: str | int = ...
+        number = 1
         filename: str = f"figure_1.{suffix}"
         if dir is None:
             dir = Path(".\\figures\\")
@@ -193,13 +194,12 @@ class Array1D:
         if not dir.exists():
             dir.mkdir()
 
-        lock_path = dir / "save.lock"
+        lock_path: Path = dir / "save.lock"
         with FileLock(str(lock_path)):
-            number: int = 1
             while (dir / f"figure_{number}.{suffix}").exists():
                 number += 1
             filename = f"figure_{number}.{suffix}"
-            path = dir / filename
+            path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
 
     def mean(self) -> Real:
@@ -291,6 +291,10 @@ class Array2D:
     __hash__: ClassVar[None] = None
 
     def __init__(self, x: ArrayLike[Real], y: ArrayLike[Real]) -> None:
+        if len(x) == 0 or len(y) == 0:
+            raise ValueError("Data cannot be empty.")
+        if len(x) != len(y):
+            raise ValueError("x and y must be the same length.")
         x_exception: TypeError = TypeError("x must contain only real numbers")
         y_exception: TypeError = TypeError("y must contain only real numbers")
         exceptions: dict[TypeError, bool] = {
@@ -427,7 +431,7 @@ class Array2D:
 
     def scatter(
         self,
-        s: ArrayLike[Real] | float | None = ...,
+        s: ArrayLike[Real] | float | None = None,
         c: ArrayLike | ColorType | Sequence[ColorType] | None = None,
         marker: MarkerType | None = None,
         cmap: str | Colormap | None = None,
@@ -443,8 +447,6 @@ class Array2D:
 
         :returntype PathCollection:
         """
-        if s is ...:
-            s = None
         return self.__ax.scatter(
             self.__x, self.__y, s, c, marker=marker, alpha=alpha, cmap=cmap
         )
@@ -500,7 +502,7 @@ class Array2D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        number: str | int = ...
+        number = 1
         filename: str = f"figure_1.{suffix}"
         if dir is None:
             dir = Path(".\\figures\\")
@@ -509,13 +511,12 @@ class Array2D:
         if not dir.exists():
             dir.mkdir()
 
-        lock_path = dir / "save.lock"
+        lock_path: Path = dir / "save.lock"
         with FileLock(str(lock_path)):
-            number: int = 1
             while (dir / f"figure_{number}.{suffix}").exists():
                 number += 1
             filename = f"figure_{number}.{suffix}"
-            path = dir / filename
+            path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
 
 
@@ -529,6 +530,10 @@ class Array3D:
     def __init__(
         self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
     ) -> None:
+        if len(x) == 0 or len(y) == 0 or len(z) == 0:
+            raise ValueError("Data cannot be empty.")
+        if len(x) != len(y) or len(y) != len(z):
+            raise ValueError("x, y, and z must be the same length.")
         x_exception: TypeError = TypeError("x must contain only real numbers")
         y_exception: TypeError = TypeError("y must contain only real numbers")
         z_exception: TypeError = TypeError("z must contain only real numbers")
@@ -690,7 +695,7 @@ class Array3D:
             raise ValueError(
                 f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
             )
-        number: str | int = ...
+        number = 1
         filename: str = f"figure_1.{suffix}"
         if dir is None:
             dir = Path(".\\figures\\")
@@ -699,11 +704,10 @@ class Array3D:
         if not dir.exists():
             dir.mkdir()
 
-        lock_path = dir / "save.lock"
+        lock_path: Path = dir / "save.lock"
         with FileLock(str(lock_path)):
-            number: int = 1
             while (dir / f"figure_{number}.{suffix}").exists():
                 number += 1
             filename = f"figure_{number}.{suffix}"
-            path = dir / filename
+            path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
