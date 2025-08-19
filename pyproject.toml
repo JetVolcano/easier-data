@@ -14,7 +14,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "accurate-benchmark>=2.1.0",
+    "accurate-benchmark>=2.2.0",
     "jupyter>=1.1.1",
     "ruff>=0.12.0",
     "scipy-stubs>=1.16.1.0",
