@@ -1,9 +1,9 @@
 [project]
 name = "easier-data"
-version = "1.0.0"
+version = "1.0.0b3"
 description = "Python package for managing data and plotting easier"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "filelock>=3.18.0",
     "matplotlib>=3.10.3",
@@ -14,8 +14,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    # Jupyter later
     "accurate-benchmark>=2.2.0",
-    "jupyter>=1.1.1",
     "ruff>=0.12.0",
     "scipy-stubs>=1.16.1.0",
     "sqlalchemy>=2.0.41",
