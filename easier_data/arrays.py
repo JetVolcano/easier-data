@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import deque
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from numbers import Real
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Final
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,46 +13,80 @@ from matplotlib.colors import Colormap
 from matplotlib.container import BarContainer
 from matplotlib.lines import Line2D
 from matplotlib.typing import ColorType, MarkerType
+from mpl_toolkits.mplot3d import Axes3D
+
+# from mpl_toolkits.mplot3d.art3d import Line3D, Path3DCollection
 from scipy import stats
 
-from ._types import ArrayLike, check_type
+from ._types import ArrayLike, _check_type
 
 
 if TYPE_CHECKING:
     from scipy.stats._stats_py import ModeResult
 
 
+_FORMATS: Final[tuple] = (
+    "eps",
+    "jpeg",
+    "jpg",
+    "pdf",
+    "pgf",
+    "png",
+    "ps",
+    "raw",
+    "rgba",
+    "svg",
+    "svgz",
+    "tif",
+    "tiff",
+    "webp",
+)
+
+
 class Array1D:
     """
-    1 Dimensional Array meant for 1 Dimensional Data
+    Array1D
+    -------
+
+    Takes in 1-Dimensional data and is able to plot it in many different ways.
     """
 
     __hash__: ClassVar[None] = None
 
     def __init__(self, data: ArrayLike[Real]) -> None:
+        """
+        Parameters
+        ----------
+        self : Array1D
+            Instance of the class
+        data : ArrayLike[Real]
+            1-Dimensional Data
+
+        Raises
+        ------
+        ValueError
+            Data cannot be empty.
+        TypeError
+            Data must only contain real numbers.
+        """
+
         if len(data) == 0:
             raise ValueError("Data cannot be empty.")
-        if not check_type(data, Real):
+        if not _check_type(data, Real):
             raise TypeError("Data must only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
-        self._type: type = type(data)
-        self.__fig, self.__ax = plt.subplots()
+        self.__original: str = f"{data!r}"
+        self.__fig: plt.Figure
+        self.__ax: plt.Axes
 
     def __repr__(self) -> str:
-        """
-        Returns the representation of the 1 Dimensional Array
-
-        :returntype str:
-        """
-        return f"Array1D(data={self._type(self.__data) if self._type != np.ndarray else self.__data!r})"
+        return f"Array1D(data={self.__original})"
 
     def __str__(self) -> str:
-        """
-        Returns the string representation of the 1 Dimensional Array
+        return f"Array1D({self.__original})"
 
-        :returntype str:
-        """
-        return f"Array1D({self._type(self.__data) if self._type != np.ndarray else self.__data!r})"
+    def array_equal(self, other: Array1D) -> bool:
+        return np.array_equal(self.__data, other.__data)
 
     def __eq__(self, other: Array1D) -> Any:
         return self.__data == other.__data
@@ -75,79 +108,56 @@ class Array1D:
 
     @property
     def data(self) -> np.ndarray:
-        """
-        Returns the data from the array
-
-        :returntype np.ndarray:
-        """
         return self.__data
 
-    def append(self, obj: Real, /) -> None:
-        """
-        Appends an object to the array
-
-        :param obj: The object to append
-        :returntype None:
-        """
-        self.__data = np.append(self.__data, obj)
-
-    def appendleft(self, x: Real, /) -> None:
-        """
-        Appends an object to the left side of the array
-
-        :param x: The object to append
-        :returntype None:
-        """
-        self.__data = np.insert(self.__data, 0, x)
-
-    def extend(self, iterable: Iterable[Real], /) -> None:
-        """
-        Extends an iterable to the array
-
-        :param iterable: The iterable to extend
-        :returntype None:
-        """
-        self.__data = np.concatenate((self.__data, iterable))
-
-    def extendleft(self, iterable: Iterable[Real], /) -> None:
-        """
-        Extends an iterable to the left side of the array
-
-        :param iterable: The iterable to extend
-        :returntype None:
-        """
-        self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))
-
     def plot(self) -> list[Line2D]:
-        """
-        Plots the data of the array
+        """Creates a line plot of the data.
 
-        :returntype list[Line2D]:
+        Returns
+        -------
+        list[Line2D]
+            The plotted figure.
         """
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
         return self.__ax.plot(self.__data)
 
     def bar(self) -> BarContainer:
-        """
-        Make a bar plot of the array
+        """Creates a bar plot of the data.
 
-        :returntype BarContainer:
+        Returns
+        -------
+        BarContainer
+            The plotted figure.
         """
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
         return self.__ax.bar(range(len(self.__data)), self.__data)
 
     def boxplot(self) -> dict[str, Any]:
-        """
-        Make a boxplot of the array
+        """Creates a boxplot of the data.
 
-        :returntype dict[str, Any]:
+        Returns
+        -------
+        dict[str, Any]
+            The plotted figure.
         """
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
         return self.__ax.boxplot(self.__data)
 
     def show(self) -> None:
-        """
-        Shows the current figure
+        """Shows the current figure."""
 
-        :returntype None:
-        """
         self.__fig.show()
 
     def save(
@@ -157,38 +167,31 @@ class Array1D:
         *,
         transparent: bool | None = None,
     ) -> None:
+        """Saves the current figure to a file.
+
+        Parameters
+        ----------
+        dir : str | Path | None, optional, default=None
+            The path that the figure will be saved.
+        suffix : str, optional, default='svg'
+            The suffix for the file.
+        transparent : bool | None, optional, default=None
+            Whether the image is transparent.
+
+        Raises
+        ------
+        ValueError
+            Suffix is not supported.
         """
-        :param dir: A directory to the path that the figure will be saved
-        :param suffix: The suffix for the saved figure
-        :param transparent: Whether or not the figure will be transparent
-        :returntype None:
-        """
-        formats: deque[str] = deque(
-            (
-                "eps",
-                "jpeg",
-                "jpg",
-                "pdf",
-                "pgf",
-                "png",
-                "ps",
-                "raw",
-                "rgba",
-                "svg",
-                "svgz",
-                "tif",
-                "tiff",
-                "webp",
-            )
-        )
-        if suffix not in formats:
+
+        if suffix not in _FORMATS:
             raise ValueError(
-                f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
+                f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FORMATS)})"
             )
         number = 1
-        filename: str = f"figure_1.{suffix}"
+        filename: str = f"figure_{number}.{suffix}"
         if dir is None:
-            dir = Path(".\\figures\\")
+            dir = Path("figures")
         if isinstance(dir, str):
             dir = Path(dir)
         if not dir.exists():
@@ -202,269 +205,209 @@ class Array1D:
             path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
 
+    @property
     def mean(self) -> Real:
-        """
-        Returns the mean of the data in the array
-
-        :returntype Real:
-        """
         return self.__data.mean()
 
+    @property
     def avg(self) -> Real:
-        """
-        Returns the average of the data in the array
-
-        :returntype Real:
-        """
         return self.mean()
 
+    @property
     def median(self) -> Real:
-        """
-        Returns the median of the data in the array
-
-        :returntype Real:
-        """
         return np.median(self.__data)
 
+    @property
     def mode(self) -> "ModeResult":
-        """
-        Returns the mode of the data in the array
-
-        :returntype ModeResult:
-        """
         return stats.mode(self.__data)
 
+    @property
     def std(self) -> Real:
-        """
-        Returns the standard deviation of the data in the array
-
-        :returntype Real:
-        """
         return self.data.std()
 
-    def stddev(self) -> Real:
-        """
-        Returns the standard deviation of the data in the array
-
-        :returntype Real:
-        """
+    @property
+    def stdev(self) -> Real:
         return self.data.std()
 
-    def quantiles(self) -> np.floating[Any]:
-        """
-        Returns the quantiles of the data in the array
-
-        :returntype floating[Any]:
-        """
+    @property
+    def quantiles(self) -> np.ndarray:
         return np.quantile(self.__data, [0.25, 0.5, 0.75])
 
+    @property
     def q1(self) -> Real:
-        """
-        Returns the first quartile of the data in the array
+        return self.quantiles[0]
 
-        :returntype Real:
-        """
-        return self.quantiles()[0]
-
+    @property
     def q3(self) -> Real:
-        """
-        Returns the third quartile of the data in the array
+        return self.quantiles[2]
 
-        :returntype Real:
-        """
-        return self.quantiles()[2]
-
+    @property
     def iqr(self) -> Real:
-        """
-        Returns the interquartile range of the data in the array
-
-        :returntype Real:
-        """
-        return self.q3() - self.q1()
+        return self.q3 - self.q1
 
 
 class Array2D:
     """
-    2 Dimensional Array meant for 2 Dimensional Data
+    Array2D
+    -------
+
+    Takes in 2 -Dimensional data and is able to plot it in many different ways.
     """
 
     __hash__: ClassVar[None] = None
 
     def __init__(self, x: ArrayLike[Real], y: ArrayLike[Real]) -> None:
-        if len(x) == 0 or len(y) == 0:
+        """
+        Parameters
+        ----------
+        self : Array2D
+            Instance of the class
+        x : ArrayLike[Real]
+            1-Dimensional Data for the x-axis
+        y : ArrayLike[Real]
+            1-Dimensional Data for the y-axis
+
+        Raises
+        ------
+        ValueError
+            Data cannot be empty.
+        ValueError
+            x and y must be the same length.
+        ExceptionGroup
+            x and y must contain only real numbers.
+        """
+
+        if [len(x), len(y)].count(0):
             raise ValueError("Data cannot be empty.")
         if len(x) != len(y):
             raise ValueError("x and y must be the same length.")
-        x_exception: TypeError = TypeError("x must contain only real numbers")
-        y_exception: TypeError = TypeError("y must contain only real numbers")
-        exceptions: dict[TypeError, bool] = {
-            x_exception: not check_type(x, Real),
-            y_exception: not check_type(y, Real),
-        }
-        if any(exceptions.values()):
-            raise ExceptionGroup(
-                f"{sum(exceptions.values())} TypeError(s) occurred",
-                [exception for exception in exceptions if exceptions[exception]],
-            )
-        self.__x: np.ndarray = np.array(x)
-        self._xtype: type = type(x)
-        self.__y: np.ndarray = np.array(y)
-        self._ytype: type = type(y)
-        self.__fig, self.__ax = plt.subplots()
+        exceptions: list[TypeError] = [
+            TypeError("x must contain only real numbers")
+            if not _check_type(x, Real)
+            else None,
+            TypeError("y must contain only real numbers")
+            if not _check_type(y, Real)
+            else None,
+        ]
+        for _ in range(exceptions.count(None)):
+            exceptions.remove(None)
+        if len(exceptions) > 0:
+            raise ExceptionGroup(f"{len(exceptions)} TypeError(s) occurred", exceptions)
+        self.__points: np.ndarray = np.column_stack((x, y))
+        self.__original_x: str = f"{x!r}"
+        self.__original_y: str = f"{y!r}"
+        self.__fig: plt.Figure
+        self.__ax: plt.Axes
 
     def __repr__(self) -> str:
-        """
-        Returns the representation of the 2 Dimensional Array
-
-        :returntype str:
-        """
-        return f"Array2D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r})"
+        return f"Array2D(x={self.__original_x}, y={self.__original_y})"
 
     def __str__(self) -> str:
-        """
-        Returns the string representation of the 2 Dimensional Array
+        return f"Array2D({self.__original_x}, {self.__original_y})"
 
-        :returntype str:
-        """
-        return f"Array2D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r})"
+    def array_equal(self, other: Array2D) -> bool:
+        return np.array_equal(self.__points, other.__points)
 
     def __eq__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) == np.array([other.__x, other.__y])
+        return self.__points == self.__points
 
     def __ne__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) != np.array([other.__x, other.__y])
+        return self.__points != self.__points
 
     def __gt__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) > np.array([other.__x, other.__y])
+        return self.__points > self.__points
 
     def __ge__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) >= np.array([other.__x, other.__y])
+        return self.__points >= self.__points
 
     def __lt__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) < np.array([other.__x, other.__y])
+        return self.__points < self.__points
 
     def __le__(self, other: Array2D) -> Any:
-        return np.array([self.__x, self.__y]) <= np.array([other.__x, other.__y])
+        return self.__points <= self.__points
 
     @property
     def x(self) -> np.ndarray:
-        """
-        Returns the data of x
-
-        :returntype np.ndarray:
-        """
-        return self.__x
+        return self.__points[:, 0]
 
     @property
     def y(self) -> np.ndarray:
-        """
-        Returns the data of y
-
-        :returntype np.ndarray:
-        """
-        return self.__y
+        return self.__points[:, 1]
 
     @property
-    def data(self) -> dict[str, np.ndarray]:
-        """
-        Returns a dict containing the x and y values
-
-        :returntype dict[str, np.ndarray]
-        """
-
-        return {"x": self.__x, "y": self.__y}
-
-    def append(self, x: Real, y: Real) -> None:
-        """
-        Append values to both the x and y posistions
-
-        :param x: The value to append to the x posistion
-        :param y: The value to append to the y posistion
-
-        :returntype None:
-        """
-        self.__x = np.append(self.__x, x)
-        self.__y = np.append(self.__y, y)
-
-    def appendleft(self, x: Real, y: Real) -> None:
-        """
-        Append values to left of both x and y positions
-
-        :param x: The value to append to the left of the x position
-        :param y: The value to append to the left of the y position
-
-        :returntype None:
-        """
-
-        self.__x = np.insert(self.__x, 0, x)
-        self.__y = np.insert(self.__y, 0, y)
-
-    def extend(self, x: Iterable[Real], y: Iterable[Real]) -> None:
-        """
-        Extend an iterable both the x and y positions
-
-        :param x: The iterable to extend to the x position
-        :param y: The iterable to extend to the y position
-        :returntype None:
-        """
-        self.__x = np.concatenate((self.__x, x))
-        self.__y = np.concatenate((self.__y, y))
-
-    def extendleft(self, x: Iterable[Real], y: Iterable[Real]) -> None:
-        """
-        Extend an iterable to left of both x and y positions
-
-        :param x: The iterable to extend to the left of the x position
-        :param y: The iterable to extend to the left of the y position
-        :returntype None:
-        """
-        self.__x = np.concatenate((np.array(x)[::-1], self.__x))
-        self.__y = np.concatenate((np.array(y)[::-1], self.__y))
+    def data(self) -> np.ndarray:
+        return self.__points
 
     def plot(self) -> list[Line2D]:
-        """
-        Plot the data of the array
+        """Creates a line plot of the data.
 
-        :returntype list[Line2D]:
+        Returns
+        -------
+        list[Line2D]
+            The plotted figure.
         """
-        return self.__ax.plot(self.__x, self.__y)
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
+        return self.__ax.plot(self.x, self.y)
 
     def scatter(
         self,
         s: ArrayLike[Real] | float | None = None,
-        c: ArrayLike | ColorType | Sequence[ColorType] | None = None,
+        c: np.typing.ArrayLike | ColorType | Sequence[ColorType] | None = None,
         marker: MarkerType | None = None,
         cmap: str | Colormap | None = None,
         alpha: float | None = None,
     ) -> PathCollection:
-        """
-        Returns a scatter plot of the array
+        """Creates a scatter plot of the data.
 
-        :param s: Size of the marker
-        :param marker: The marker of the plot
-        :param cmap: The colormap to plot
-        :param alpha: The alpha of all the markers
+        Parameters
+        ----------
+        s : ArrayLike[Real] | float | None, optional, default=None
+            Sizes of the points.
+        c : np.typing.ArrayLike | ColorType | Sequence[ColorType] | None, optional, default=None
+            Colors of the points.
+        marker : MarkerType | None, optional, default=None
+            The shape of the marker.
+        cmap: str | Colormap | None, optional, default=None
+            Colormap of the points.
+        alpha : float | None, optional, default=None
+            Alpha of the points.
 
-        :returntype PathCollection:
+        Returns
+        -------
+        PathCollection
+            The plotted data.
         """
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
         return self.__ax.scatter(
-            self.__x, self.__y, s, c, marker=marker, alpha=alpha, cmap=cmap
+            self.x, self.y, s, c, marker=marker, alpha=alpha, cmap=cmap
         )
 
     def bar(self) -> BarContainer:
-        """
-        Make a bar plot of the array
+        """Creates a bar plot of the data.
 
-        :returntype BarContainer:
+        Returns
+        -------
+        BarContainer
+            The plotted figure.
         """
-        return self.__ax.bar(self.__x, self.__y)
+
+        try:
+            self.__ax, self.__fig
+        except AttributeError:
+            self.__fig, self.__ax = plt.subplots()
+        return self.__ax.bar(self.x, self.y)
 
     def show(self) -> None:
-        """
-        Shows the current figure
+        """Shows the current figure."""
 
-        :returntype None:
-        """
         self.__fig.show()
 
     def save(
@@ -474,38 +417,31 @@ class Array2D:
         *,
         transparent: bool | None = None,
     ) -> None:
+        """Saves the current figure to a file.
+
+        Parameters
+        ----------
+        dir : str | Path | None, optional, default=None
+            The path that the figure will be saved.
+        suffix : str, optional, default='svg'
+            The suffix for the file.
+        transparent : bool | None, optional, default=None
+            Whether the image is transparent.
+
+        Raises
+        ------
+        ValueError
+            Suffix is not supported.
         """
-        :param dir: A directory to the path that the figure will be saved
-        :param suffix: The suffix for the saved figure
-        :param transparent: Whether or not the figure will be transparent
-        :returntype None:
-        """
-        formats: deque[str] = deque(
-            (
-                "eps",
-                "jpeg",
-                "jpg",
-                "pdf",
-                "pgf",
-                "png",
-                "ps",
-                "raw",
-                "rgba",
-                "svg",
-                "svgz",
-                "tif",
-                "tiff",
-                "webp",
-            )
-        )
-        if suffix not in formats:
+
+        if suffix not in _FORMATS:
             raise ValueError(
-                f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
+                f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FORMATS)})"
             )
         number = 1
-        filename: str = f"figure_1.{suffix}"
+        filename: str = f"figure_{number}.{suffix}"
         if dir is None:
-            dir = Path(".\\figures\\")
+            dir = Path("figures")
         if isinstance(dir, str):
             dir = Path(dir)
         if not dir.exists():
@@ -530,46 +466,38 @@ class Array3D:
     def __init__(
         self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
     ) -> None:
-        if len(x) == 0 or len(y) == 0 or len(z) == 0:
+        if [len(x), len(y), len(z)].count(0):
             raise ValueError("Data cannot be empty.")
         if len(x) != len(y) or len(y) != len(z):
             raise ValueError("x, y, and z must be the same length.")
-        x_exception: TypeError = TypeError("x must contain only real numbers")
-        y_exception: TypeError = TypeError("y must contain only real numbers")
-        z_exception: TypeError = TypeError("z must contain only real numbers")
-        exceptions: dict[TypeError, bool] = {
-            x_exception: not check_type(x, Real),
-            y_exception: not check_type(y, Real),
-            z_exception: not check_type(z, Real),
-        }
-        if any(exceptions.values()):
-            raise ExceptionGroup(
-                f"{sum(exceptions.values())} TypeError(s) occurred",
-                [exception for exception in exceptions if exceptions[exception]],
-            )
-        self.__x: np.ndarray = np.array(x)
-        self._xtype: type = type(x)
-        self.__y: np.ndarray = np.array(y)
-        self._ytype: type = type(y)
-        self.__z: np.ndarray = np.array(z)
-        self._ztype: type = type(z)
+        exceptions: list[TypeError] = [
+            TypeError("x must contain only real numbers")
+            if not _check_type(x, Real)
+            else None,
+            TypeError("y must contain only real numbers")
+            if not _check_type(y, Real)
+            else None,
+            TypeError("z must contain only real numbers")
+            if not _check_type(z, Real)
+            else None,
+        ]
+        for _ in range(exceptions.count(None)):
+            exceptions.remove(None)
+        if len(exceptions) > 0:
+            raise ExceptionGroup(f"{len(exceptions)} TypeError(s) occurred", exceptions)
+        self.__points: np.ndarray = np.column_stack((x, y, z))
+        self.__original_x: str = f"{x!r}"
+        self.__original_y: str = f"{y!r}"
+        self.__original_z: str = f"{z!r}"
+        self.__fig: plt.Figure
+        self.__ax: Axes3D
         self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     def __repr__(self) -> str:
-        """
-        Returns the representation of the 3 Dimensional Array
-
-        :returntype str:
-        """
-        return f"Array3D(x={self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, y={self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, z={self._ztype(self.__z) if self._ztype != np.ndarray else self.__z!r})"
+        return f"Array3D(x={self.__original_x}, y={self.__original_y}, z={self.__original_z})"
 
     def __str__(self) -> str:
-        """
-        Returns the string representation of the 3 Dimensional Array
-
-        :returntype str:
-        """
-        return f"Array3D({self._xtype(self.__x) if self._xtype != np.ndarray else self.__x!r}, {self._ytype(self.__y) if self._ytype != np.ndarray else self.__y!r}, {self._ztype(self.__z) if self._ztype != np.ndarray else self.__z!r})"
+        return f"Array3D({self.__original_x}, {self.__original_y}, {self.__original_z})"
 
     @property
     def x(self) -> np.ndarray:
@@ -578,7 +506,7 @@ class Array3D:
 
         :returntype np.ndarray:
         """
-        return self.__x
+        return self.__points[:, 0]
 
     @property
     def y(self) -> np.ndarray:
@@ -587,7 +515,7 @@ class Array3D:
 
         :returntype np.ndarray:
         """
-        return self.__y
+        return self.__points[:, 1]
 
     @property
     def z(self) -> np.ndarray:
@@ -596,69 +524,29 @@ class Array3D:
 
         :returntype np.ndarray:
         """
-        return self.__z
+        return self.__points[:, 2]
 
     @property
-    def data(self) -> dict[str, np.ndarray]:
+    def data(self) -> np.ndarray:
         """
-        Returns a dict containing the x, y, and z values
+        Returns the points of the Array3D instance
 
-        :returntype dict[str, np.ndarray]
+        :returntype np.ndarray:
         """
-        return {"x": self.__x, "y": self.__y, "z": self.__z}
+        return self.__points
 
-    def append(self, x: Real, y: Real, z: Real) -> None:
+    def plot(self): ...
+    def bar(self): ...
+    def stem(self): ...
+    def scatter(self): ...
+    def quiver(self): ...
+    def show(self) -> None:
         """
-        Append values to the x, y, and z posisions
+        Shows the current figure
 
-        :param x: The value to append to the x position
-        :param y: The value to append to the y position
-        :param z: The value to append to the z position
         :returntype None:
         """
-        self.__x = np.append(self.__x, x)
-        self.__y = np.append(self.__y, y)
-        self.__z = np.append(self.__z, z)
-
-    def appendleft(self, x: Real, y: Real, z: Real) -> None:
-        """
-        Append values to the left of the x, y, and z positions
-
-        :param x: The value to append to the left of the x position
-        :param y: The value to append to the left of the y position
-        :param z: The value to append to the left of the z position
-        """
-        self.__x = np.insert(self.__x, 0, x)
-        self.__y = np.insert(self.__y, 0, y)
-        self.__z = np.insert(self.__z, 0, z)
-
-    def extend(self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]) -> None:
-        """
-        Extend an iterable the x, y, and z positions
-
-        :param x: The iterable to extend to the x position
-        :param y: The iterable to extend to the y position
-        :param z: The iterable to extend to the z position
-        :returntype None:
-        """
-        self.__x = np.concatenate((self.__x, x))
-        self.__y = np.concatenate((self.__y, y))
-        self.__z = np.concatenate((self.__z, z))
-
-    def extendleft(
-        self, x: Iterable[Real], y: Iterable[Real], z: Iterable[Real]
-    ) -> None:
-        """
-        Extend an iterable the left of the x, y, and z positions
-
-        :param x: The iterable to extend to the left of the x position
-        :param y: The iterable to extend to the left of the y position
-        :param z: The iterable to extend to the left of the z position
-        :returntype None:
-        """
-        self.__x = np.concatenate((np.array(x)[::-1], self.__x))
-        self.__y = np.concatenate((np.array(y)[::-1], self.__y))
-        self.__z = np.concatenate((np.array(z)[::-1], self.__z))
+        self.__fig.show()
 
     def save(
         self,
@@ -667,38 +555,31 @@ class Array3D:
         *,
         transparent: bool | None = None,
     ) -> None:
+        """Saves the current figure to a file.
+
+        Parameters
+        ----------
+        dir : str | Path | None, optional, default=None
+            The path that the figure will be saved.
+        suffix : str, optional, default='svg'
+            The suffix for the file.
+        transparent : bool | None, optional, default=None
+            Whether the image is transparent.
+
+        Raises
+        ------
+        ValueError
+            Suffix is not supported.
         """
-        :param dir: A directory to the path that the figure will be saved
-        :param suffix: The suffix for the saved figure
-        :param transparent: Whether or not the figure will be transparent
-        :returntype None:
-        """
-        formats: deque[str] = deque(
-            (
-                "eps",
-                "jpeg",
-                "jpg",
-                "pdf",
-                "pgf",
-                "png",
-                "ps",
-                "raw",
-                "rgba",
-                "svg",
-                "svgz",
-                "tif",
-                "tiff",
-                "webp",
-            )
-        )
-        if suffix not in formats:
+
+        if suffix not in _FORMATS:
             raise ValueError(
-                f"Format '{suffix}' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff, webp)"
+                f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FORMATS)})"
             )
         number = 1
-        filename: str = f"figure_1.{suffix}"
+        filename: str = f"figure_{number}.{suffix}"
         if dir is None:
-            dir = Path(".\\figures\\")
+            dir = Path("figures")
         if isinstance(dir, str):
             dir = Path(dir)
         if not dir.exists():

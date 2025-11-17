@@ -1,5 +1,5 @@
 from collections import deque
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from typing import Any, Final, Generic, TypeVar, overload
 
 import numpy as np
@@ -16,9 +16,7 @@ class ArrayLike(Generic[T], Sequence[T]):
     @property
     def data(self) -> np.ndarray:
         """
-        Returns the data of the ArrayLike
-
-        :returntype np.ndarray:
+        Data of the ArrayLike object
         """
         return self.__data
 
@@ -49,16 +47,27 @@ ArrayLike.register(deque)
 ArrayLike.register(np.ndarray)
 
 
-def check_type(iterable: Iterable[Any], _type: type | tuple[type, ...]) -> bool:
-    """
-    Takes a given iterable and checks the type of the values inside to see if it matches the _type parameter
+def _check_type(iterable: ArrayLike[Any], _type: type | tuple[type, ...]) -> bool:
+    """Takes a given iterable and checks the type of the values inside to see if it matches the _type parameter
 
-    :param iterable: The iterable to check
-    :param _type: The type to check the values against
-    :type _type: type | tuple[type, ...]
-    :type iterable: Iterable
-    :returntype bool:
+    Parameters
+    ----------
+    iterable : ArrayLike[Any]
+        The iterable to check the type of
+    _type : type | tuple[type, ...]
+        The type to check the values against
+
+    Returns
+    -------
+    bool
+        Whether the check passed
     """
-    if not isinstance(iterable, Iterable):
+    if not isinstance(iterable, ArrayLike):
         return False
     return all(isinstance(item, _type) for item in iterable)
+
+
+__all__: list[str] = [
+    "ArrayLike",
+    "_check_type",
+]
