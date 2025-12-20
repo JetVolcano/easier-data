@@ -2,30 +2,47 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from functools import partial
-from numbers import Number, Real
-from typing import TYPE_CHECKING, Any, ClassVar, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import numpy as np
 from scipy import stats
 
-from ._types import ArrayLike, _check_type
+from ._types import (
+    _INSTANCE_CHECK_NUMBER,
+    _INSTANCE_CHECK_REAL,
+    ArrayLike,
+    Number,
+    Real,
+    _check_type,
+)
 
 
 if TYPE_CHECKING:
-    from scipy.stats._stats_py import ModeResult
+    from scipy.stats._stats_py import ModeResult, _FloatOrND
 
 
 class DataSet:
-    __hash__: ClassVar[None] = None
-
     def __init__(self, data: ArrayLike[Real]) -> None:
+        """
+        Parameters
+        ----------
+        data : ArrayLike[Real]
+            1-Dimensional data for the DataSet.
+
+        Raises
+        ------
+        ValueError
+            Data cannot be empty.
+        TypeError
+            Data must only contain real numbers.
+        """
         if len(data) == 0:
             raise ValueError("Data cannot be empty.")
-        if not _check_type(data, Real):
+        if not _check_type(data, _INSTANCE_CHECK_REAL):
             raise TypeError("Data must only contain real numbers.")
         self.__data: np.ndarray = np.array(data)
         self.__orginal: str = f"{data!r}"
-        self.trim_mean: Final[Callable[[float, int | None], Real]] = partial(
+        self.trim_mean: Final[Callable[..., _FloatOrND]] = partial(
             stats.trim_mean, self.__data
         )
 
@@ -35,22 +52,42 @@ class DataSet:
     def __str__(self) -> str:
         return f"DataSet({self.__orginal})"
 
-    def __eq__(self, other: DataSet) -> Any:
+    def __hash__(self) -> int:
+        return hash(tuple(self.__data.tolist()))
+
+    def array_equal(self, other: ArrayLike) -> bool:
+        if not isinstance(other, self.__class__):
+            return np.array_equal(self.__data, other)
+        return np.array_equal(self.__data, other.__data)
+
+    def __eq__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
         return self.__data == other.__data
 
-    def __ne__(self, other: DataSet) -> Any:
+    def __ne__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
         return self.__data != other.__data
 
-    def __gt__(self, other: DataSet) -> Any:
+    def __gt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data > other
         return self.__data > other.__data
 
-    def __ge__(self, other: DataSet) -> Any:
+    def __ge__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data >= other
         return self.__data >= other.__data
 
-    def __lt__(self, other: DataSet) -> Any:
+    def __lt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data < other
         return self.__data < other.__data
 
-    def __le__(self, other: DataSet) -> Any:
+    def __le__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data <= other
         return self.__data <= other.__data
 
     @property
@@ -63,7 +100,7 @@ class DataSet:
 
     @property
     def median(self) -> Real:
-        return np.median(self.__data)
+        return cast(Real, np.median(self.__data))
 
     @property
     def mode(self) -> "ModeResult":
@@ -91,60 +128,79 @@ class DataSet:
 
     @property
     def iqr(self) -> Real:
-        return self.q3 - self.q1
+        return cast(Real, self.q3 - self.q1)
 
     def append(self, obj: Real) -> None:
-        """Appends an object to the DataSet
+        """Appends an object to the DataSet.
 
         Parameters
         ---------
         obj : Real
-            The object to append
+            The object to append.
         """
-        self.__data = np.append(self.__data, obj)
+        if not isinstance(obj, _INSTANCE_CHECK_REAL):
+            raise TypeError(f"obj must be a real number. not type: {type(obj)}.")
+        self.__data = np.append(self.__data, np.array([obj]))
 
     def appendleft(self, x: Real) -> None:
-        """Appends an object to the left side of the DataSet
+        """Appends an object to the left side of the DataSet.
 
         Parameters
         ----------
         x : Real
-            The object to append
+            The object to append.
         """
-        self.__data = np.insert(self.__data, 0, x)
+        if not isinstance(x, _INSTANCE_CHECK_REAL):
+            raise TypeError(f"x must be a real number. not type: {type(x)}.")
+        self.__data = np.insert(self.__data, 0, np.array([x]))
 
     def extend(self, iterable: Iterable[Real]) -> None:
-        """Extends an iterable to the DataSet
+        """Extends an iterable to the DataSet.
 
         Parameters
         ----------
         iterable : Iterable[Real]
-            The iterable to extend
+            The iterable to extend.
         """
-        self.__data = np.concatenate((self.__data, iterable))
+        if not _check_type(iterable, _INSTANCE_CHECK_REAL):
+            raise TypeError("iterable must only contain real numbers.")
+        self.__data = np.concatenate((self.__data, np.array(iterable)))
 
     def extendleft(self, iterable: Iterable[Real]) -> None:
-        """Extends an iterable to the left side of the DataSet
+        """Extends an iterable to the left side of the DataSet.
 
         Parameters
         ----------
         iterable : Iterable[Real]
-            The iterable to extend
+            The iterable to extend.
         """
+        if not _check_type(iterable, _INSTANCE_CHECK_REAL):
+            raise TypeError("iterable must only contain real numbers.")
         self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))
 
 
 class ComplexDataSet:
-    __hash__: ClassVar[None] = None
-
     def __init__(self, data: ArrayLike[Number]) -> None:
+        """
+        Parameters
+        ----------
+        data : ArrayLike[Number]
+            1-Dimensional data for the DataSet.
+
+        Raises
+        ------
+        ValueError
+            Data cannot be empty.
+        TypeError
+            Data must contain only numbers.
+        """
         if len(data) == 0:
             raise ValueError("Data cannot be empty.")
-        if not _check_type(data, Number):
-            raise TypeError("Data must contain only complex or real numbers.")
+        if not _check_type(data, _INSTANCE_CHECK_NUMBER):
+            raise TypeError("Data must contain only numbers.")
         self.__data: np.ndarray = np.array(data)
         self.__orginal: str = f"{data!r}"
-        self.trim_mean: Final[Callable[[float, int | None], Number]] = partial(
+        self.trim_mean: Final[Callable[..., _FloatOrND]] = partial(
             stats.trim_mean, self.__data
         )
 
@@ -154,22 +210,42 @@ class ComplexDataSet:
     def __str__(self) -> str:
         return f"ComplexDataSet({self.__orginal})"
 
-    def __eq__(self, other: ComplexDataSet) -> Any:
+    def __hash__(self) -> int:
+        return hash(tuple(self.__data.tolist()))
+
+    def array_equal(self, other: ArrayLike) -> bool:
+        if not isinstance(other, self.__class__):
+            return np.array_equal(self.__data, other)
+        return np.array_equal(self.__data, other.__data)
+
+    def __eq__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
         return self.__data == other.__data
 
-    def __ne__(self, other: ComplexDataSet) -> Any:
+    def __ne__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
         return self.__data != other.__data
 
-    def __gt__(self, other: ComplexDataSet) -> Any:
+    def __gt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data > other
         return self.__data > other.__data
 
-    def __ge__(self, other: ComplexDataSet) -> Any:
+    def __ge__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data >= other
         return self.__data >= other.__data
 
-    def __lt__(self, other: ComplexDataSet) -> Any:
+    def __lt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data < other
         return self.__data < other.__data
 
-    def __le__(self, other: ComplexDataSet) -> Any:
+    def __le__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data <= other
         return self.__data <= other.__data
 
     @property
@@ -182,7 +258,7 @@ class ComplexDataSet:
 
     @property
     def median(self) -> Number:
-        return np.median(self.__data)
+        return cast(Number, np.median(self.__data))
 
     @property
     def mode(self) -> "ModeResult":
@@ -197,41 +273,49 @@ class ComplexDataSet:
         return self.__data.std()
 
     def append(self, obj: Number) -> None:
-        """Appends an object to the DataSet
+        """Appends an object to the DataSet.
 
         Parameters
         ---------
         obj : Number
-            The object to append
+            The object to append.
         """
-        self.__data = np.append(self.__data, obj)
+        if not isinstance(obj, _INSTANCE_CHECK_NUMBER):
+            raise TypeError(f"obj must be a number not type: {type(obj)}.")
+        self.__data = np.append(self.__data, np.array([obj]))
 
     def appendleft(self, x: Number) -> None:
-        """Appends an object to the left side of the DataSet
+        """Appends an object to the left side of the DataSet.
 
         Parameters
         ----------
         x : Number
-            The object to append
+            The object to append.
         """
-        self.__data = np.insert(self.__data, 0, x)
+        if not isinstance(x, _INSTANCE_CHECK_NUMBER):
+            raise TypeError(f"x must be a number not type: {type(x)}.")
+        self.__data = np.insert(self.__data, 0, np.array([x]))
 
     def extend(self, iterable: Iterable[Number]) -> None:
-        """Extends an iterable to the DataSet
+        """Extends an iterable to the DataSet.
 
         Parameters
         ----------
         iterable : Iterable[Number]
-            The iterable to extend
+            The iterable to extend.
         """
-        self.__data = np.concatenate((self.__data, iterable))
+        if not _check_type(iterable, _INSTANCE_CHECK_NUMBER):
+            raise TypeError("iterable must only contain numbers.")
+        self.__data = np.concatenate((self.__data, np.array(iterable)))
 
     def extendleft(self, iterable: Iterable[Number]) -> None:
-        """Extends an iterable to the left side of the DataSet
+        """Extends an iterable to the left side of the DataSet.
 
         Parameters
         ----------
         iterable : Iterable[Real]
-            The iterable to extend
+            The iterable to extend.
         """
+        if not _check_type(iterable, _INSTANCE_CHECK_NUMBER):
+            raise TypeError("iterable must only contain numbers.")
         self.__data = np.concatenate((np.array(iterable)[::-1], self.__data))
