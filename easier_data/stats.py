@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import numpy as np
 from scipy import stats
 
-from ._types import (
+from ._internal._types import (
     _INSTANCE_CHECK_NUMBER,
     _INSTANCE_CHECK_REAL,
     ArrayLike,
@@ -15,6 +15,7 @@ from ._types import (
     Real,
     _check_type,
 )
+from ._internal.errors import DataSetErrors
 
 
 if TYPE_CHECKING:
@@ -32,14 +33,9 @@ class DataSet:
         Raises
         ------
         ValueError
-            Data cannot be empty.
-        TypeError
-            Data must only contain real numbers.
+            If any of the arrays are empty.
         """
-        if len(data) == 0:
-            raise ValueError("Data cannot be empty.")
-        if not _check_type(data, _INSTANCE_CHECK_REAL):
-            raise TypeError("Data must only contain real numbers.")
+        DataSetErrors.DS(data)
         self.__data: np.ndarray = np.array(data)
         self.__orginal: str = f"{data!r}"
         self.trim_mean: Final[Callable[..., _FloatOrND]] = partial(
@@ -190,14 +186,9 @@ class ComplexDataSet:
         Raises
         ------
         ValueError
-            Data cannot be empty.
-        TypeError
-            Data must contain only numbers.
+            If any of the arrays are empty.
         """
-        if len(data) == 0:
-            raise ValueError("Data cannot be empty.")
-        if not _check_type(data, _INSTANCE_CHECK_NUMBER):
-            raise TypeError("Data must contain only numbers.")
+        DataSetErrors.CDS(data)
         self.__data: np.ndarray = np.array(data)
         self.__orginal: str = f"{data!r}"
         self.trim_mean: Final[Callable[..., _FloatOrND]] = partial(

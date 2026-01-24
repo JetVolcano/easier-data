@@ -1,0 +1,6 @@
+class Vector3D:
+    def __init__(self) -> None: ...
+
+
+class Vector2D:
+    def __init__(self) -> None: ...

@@ -19,7 +19,8 @@ from matplotlib.typing import ColorType, MarkerType
 from scipy import stats
 from scipy.interpolate import CubicSpline
 
-from ._types import _INSTANCE_CHECK_REAL, ArrayLike, Real, _check_type
+from ._internal._types import ArrayLike, Real
+from ._internal.errors import NDArrayErrors
 
 
 if TYPE_CHECKING:
@@ -43,118 +44,73 @@ _FIGURE_FORMATS: Final[tuple[str, ...]] = (
 )
 
 
-class Array1D:
+class Array3D:
     """
-    Array1D
-    -------
-
-    Takes in 1-Dimensional data and is able to plot it in many different ways.
+    3 Dimensional Array meant for 3 Dimensional Data
     """
 
-    def __init__(self, data: ArrayLike[Real]) -> None:
+    def __init__(
+        self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
+    ) -> None:
         """
         Parameters
         ----------
-        data : ArrayLike[Real]
-            1-Dimensional Data
+        x : ArrayLike[Real]
+            1-Dimensional Data for the x-axis
+        y : ArrayLike[Real]
+            1-Dimensional Data for the y-axis
+        z : ArrayLike[Real]
+            1-Dimensional Data for the z-axis
 
         Raises
         ------
         ValueError
-            Data cannot be empty.
-        TypeError
-            Data must only contain real numbers.
+            If any of the arrays are empty.
+        ValueError
+            If the arrays are not the same length.
         """
-        if len(data) == 0:
-            raise ValueError("Data cannot be empty.")
-        if not _check_type(data, _INSTANCE_CHECK_REAL):
-            raise TypeError("Data must only contain real numbers.")
-        self.__data: np.ndarray = np.array(data)
-        self.__original: str = f"{data!r}"
+        NDArrayErrors.ARR3D(x, y, z)
+        self.__points: np.ndarray = np.column_stack(
+            cast(Sequence[ArrayLike], (x, y, z))
+        )
+        self.__original_x: str = f"{x!r}"
+        self.__original_y: str = f"{y!r}"
+        self.__original_z: str = f"{z!r}"
         self.__fig: Figure
         self.__ax: Axes
-        self.__fig, self.__ax = plt.subplots()
+        self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     def __repr__(self) -> str:
-        return f"Array1D(data={self.__original})"
+        return f"Array3D(x={self.__original_x}, y={self.__original_y}, z={self.__original_z})"
 
     def __str__(self) -> str:
-        return f"Array1D({self.__original})"
+        return f"Array3D({self.__original_x}, {self.__original_y}, {self.__original_z})"
 
-    def __hash__(self) -> int:
-        return hash(tuple(self.__data.tolist()))
+    @property
+    def x(self) -> np.ndarray:
+        return self.__points[:, 0]
 
-    def array_equal(self, other: ArrayLike) -> bool:
-        if not isinstance(other, self.__class__):
-            return np.array_equal(self.__data, other)
-        return np.array_equal(self.__data, other.__data)
+    @property
+    def y(self) -> np.ndarray:
+        return self.__points[:, 1]
 
-    def __eq__(self, other: Any) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data == other
-        return self.__data == other.__data
-
-    def __ne__(self, other: Any) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data == other
-        return self.__data != other.__data
-
-    def __gt__(self, other: Any) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data > other
-        return self.__data > other.__data
-
-    def __ge__(self, other: Array1D) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data >= other
-        return self.__data >= other.__data
-
-    def __lt__(self, other: Any) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data < other
-        return self.__data < other.__data
-
-    def __le__(self, other: Any) -> Any:
-        if not isinstance(other, self.__class__):
-            return self.__data <= other
-        return self.__data <= other.__data
+    @property
+    def z(self) -> np.ndarray:
+        return self.__points[:, 2]
 
     @property
     def data(self) -> np.ndarray:
-        return self.__data
+        return self.__points
 
-    def plot(self) -> list[Line2D]:
-        """Creates a line plot of the data.
-
-        Returns
-        -------
-        list[Line2D]
-            The plotted figure.
-        """
-        return self.__ax.plot(self.__data)
-
-    def bar(self) -> BarContainer:
-        """Creates a bar plot of the data.
-
-        Returns
-        -------
-        BarContainer
-            The plotted figure.
-        """
-        return self.__ax.bar(range(len(self.__data)), self.__data)
-
-    def boxplot(self) -> dict[str, Any]:
-        """Creates a boxplot of the data.
-
-        Returns
-        -------
-        dict[str, Any]
-            The plotted figure.
-        """
-        return self.__ax.boxplot(self.__data)
-
+    def plot(self): ...
+    def bar(self): ...
+    def stem(self): ...
+    def scatter(self): ...
+    def quiver(self): ...
     def show(self) -> None:
-        """Shows the current figure."""
+        """
+        Shows the current figure
+        """
         self.__fig.show()
 
     def save(
@@ -184,7 +140,7 @@ class Array1D:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
             )
-        number = 1
+        number: int = 1
         filename: str = f"figure_{number}.{suffix}"
         if dir is None:
             dir = Path("figures")
@@ -200,51 +156,6 @@ class Array1D:
             filename = f"figure_{number}.{suffix}"
             path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
-
-    @property
-    def mean(self) -> Real:
-        return self.__data.mean()
-
-    @property
-    def avg(self) -> Real:
-        return self.mean
-
-    @property
-    def median(self) -> np.floating[Any]:
-        return np.median(self.__data)
-
-    @property
-    def mode(self) -> "ModeResult":
-        return stats.mode(self.__data)
-
-    @property
-    def std(self) -> Real:
-        return self.data.std()
-
-    @property
-    def stdev(self) -> Real:
-        return self.data.std()
-
-    @property
-    def quantiles(self) -> np.ndarray:
-        quantiles: np.ndarray = np.quantile(self.__data, [0.25, 0.5, 0.75])
-        if np.iscomplexobj(quantiles):
-            raise Exception(
-                "This will never happen because NumPy already checks for this"
-            )
-        return quantiles
-
-    @property
-    def q1(self) -> Real:
-        return cast(Real, self.quantiles[0])
-
-    @property
-    def q3(self) -> Real:
-        return cast(Real, self.quantiles[2])
-
-    @property
-    def iqr(self) -> Real:
-        return cast(Real, self.q3 - self.q1)
 
 
 class Array2D:
@@ -267,30 +178,11 @@ class Array2D:
         Raises
         ------
         ValueError
-            Data cannot be empty.
+            If any of the arrays are empty.
         ValueError
-            x and y must be the same length.
-        ExceptionGroup
-            x and y must contain only real numbers.
+            If the arrays are not the same length.
         """
-        if [len(x), len(y)].count(0):
-            raise ValueError("Data cannot be empty.")
-        if len(x) != len(y):
-            raise ValueError("x and y must be the same length.")
-        ERRORS: Final[Sequence[TypeError | None]] = [
-            TypeError("x must contain only real numbers")
-            if not _check_type(x, _INSTANCE_CHECK_REAL)
-            else None,
-            TypeError("y must contain only real numbers")
-            if not _check_type(y, _INSTANCE_CHECK_REAL)
-            else None,
-        ]
-        exceptions: list[TypeError] = []
-        for i in range(len(ERRORS)):
-            if isinstance(ERRORS[i], TypeError):
-                exceptions.append(cast(TypeError, ERRORS[i]))
-        if len(exceptions) > 0:
-            raise ExceptionGroup(f"{len(exceptions)} TypeError(s) occurred", exceptions)
+        NDArrayErrors.ARR2D(x, y)
         self.__points: np.ndarray = np.column_stack(cast(Sequence[ArrayLike], (x, y)))
         self.__original_x: str = f"{x!r}"
         self.__original_y: str = f"{y!r}"
@@ -450,7 +342,7 @@ class Array2D:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
             )
-        number = 1
+        number: int = 1
         filename: str = f"figure_{number}.{suffix}"
         if dir is None:
             dir = Path("figures")
@@ -468,81 +360,113 @@ class Array2D:
             self.__fig.savefig(path, transparent=transparent)
 
 
-class Array3D:
+class Array1D:
     """
-    3 Dimensional Array meant for 3 Dimensional Data
+    Array1D
+    -------
+
+    Takes in 1-Dimensional data and is able to plot it in many different ways.
     """
 
-    def __init__(
-        self, x: ArrayLike[Real], y: ArrayLike[Real], z: ArrayLike[Real]
-    ) -> None:
+    def __init__(self, data: ArrayLike[Real]) -> None:
         """
         Parameters
         ----------
+        data : ArrayLike[Real]
+            1-Dimensional Data
 
+        Raises
+        ------
+        ValueError
+            If any of the arrays are empty.
         """
-        if [len(x), len(y), len(z)].count(0):
-            raise ValueError("Data cannot be empty.")
-        if len(x) != len(y) or len(y) != len(z):
-            raise ValueError("x, y, and z must be the same length.")
-        ERRORS: Final[Sequence[TypeError | None]] = [
-            TypeError("x must contain only real numbers")
-            if not _check_type(x, _INSTANCE_CHECK_REAL)
-            else None,
-            TypeError("y must contain only real numbers")
-            if not _check_type(y, _INSTANCE_CHECK_REAL)
-            else None,
-            TypeError("z must contain only real numbers")
-            if not _check_type(z, _INSTANCE_CHECK_REAL)
-            else None,
-        ]
-        exceptions: list[TypeError] = []
-        for i in range(len(ERRORS)):
-            if isinstance(ERRORS[i], TypeError):
-                exceptions.append(cast(TypeError, ERRORS[i]))
-        if len(exceptions) > 0:
-            raise ExceptionGroup(f"{len(exceptions)} TypeError(s) occurred", exceptions)
-        self.__points: np.ndarray = np.column_stack(
-            cast(Sequence[ArrayLike], (x, y, z))
-        )
-        self.__original_x: str = f"{x!r}"
-        self.__original_y: str = f"{y!r}"
-        self.__original_z: str = f"{z!r}"
+        NDArrayErrors.ARR1D(data)
+        self.__data: np.ndarray = np.array(data)
+        self.__original: str = f"{data!r}"
         self.__fig: Figure
         self.__ax: Axes
-        self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
+        self.__fig, self.__ax = plt.subplots()
 
     def __repr__(self) -> str:
-        return f"Array3D(x={self.__original_x}, y={self.__original_y}, z={self.__original_z})"
+        return f"Array1D(data={self.__original})"
 
     def __str__(self) -> str:
-        return f"Array3D({self.__original_x}, {self.__original_y}, {self.__original_z})"
+        return f"Array1D({self.__original})"
 
-    @property
-    def x(self) -> np.ndarray:
-        return self.__points[:, 0]
+    def __hash__(self) -> int:
+        return hash(tuple(self.__data.tolist()))
 
-    @property
-    def y(self) -> np.ndarray:
-        return self.__points[:, 1]
+    def array_equal(self, other: ArrayLike) -> bool:
+        if not isinstance(other, self.__class__):
+            return np.array_equal(self.__data, other)
+        return np.array_equal(self.__data, other.__data)
 
-    @property
-    def z(self) -> np.ndarray:
-        return self.__points[:, 2]
+    def __eq__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
+        return self.__data == other.__data
+
+    def __ne__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data == other
+        return self.__data != other.__data
+
+    def __gt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data > other
+        return self.__data > other.__data
+
+    def __ge__(self, other: Array1D) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data >= other
+        return self.__data >= other.__data
+
+    def __lt__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data < other
+        return self.__data < other.__data
+
+    def __le__(self, other: Any) -> Any:
+        if not isinstance(other, self.__class__):
+            return self.__data <= other
+        return self.__data <= other.__data
 
     @property
     def data(self) -> np.ndarray:
-        return self.__points
+        return self.__data
 
-    def plot(self): ...
-    def bar(self): ...
-    def stem(self): ...
-    def scatter(self): ...
-    def quiver(self): ...
+    def plot(self) -> list[Line2D]:
+        """Creates a line plot of the data.
+
+        Returns
+        -------
+        list[Line2D]
+            The plotted figure.
+        """
+        return self.__ax.plot(self.__data)
+
+    def bar(self) -> BarContainer:
+        """Creates a bar plot of the data.
+
+        Returns
+        -------
+        BarContainer
+            The plotted figure.
+        """
+        return self.__ax.bar(range(len(self.__data)), self.__data)
+
+    def boxplot(self) -> dict[str, Any]:
+        """Creates a boxplot of the data.
+
+        Returns
+        -------
+        dict[str, Any]
+            The plotted figure.
+        """
+        return self.__ax.boxplot(self.__data)
+
     def show(self) -> None:
-        """
-        Shows the current figure
-        """
+        """Shows the current figure."""
         self.__fig.show()
 
     def save(
@@ -572,7 +496,7 @@ class Array3D:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
             )
-        number = 1
+        number: int = 1
         filename: str = f"figure_{number}.{suffix}"
         if dir is None:
             dir = Path("figures")
@@ -588,3 +512,48 @@ class Array3D:
             filename = f"figure_{number}.{suffix}"
             path: Path = dir / filename
             self.__fig.savefig(path, transparent=transparent)
+
+    @property
+    def mean(self) -> Real:
+        return self.__data.mean()
+
+    @property
+    def avg(self) -> Real:
+        return self.mean
+
+    @property
+    def median(self) -> np.floating[Any]:
+        return np.median(self.__data)
+
+    @property
+    def mode(self) -> "ModeResult":
+        return stats.mode(self.__data)
+
+    @property
+    def std(self) -> Real:
+        return self.data.std()
+
+    @property
+    def stdev(self) -> Real:
+        return self.data.std()
+
+    @property
+    def quantiles(self) -> np.ndarray:
+        quantiles: np.ndarray = np.quantile(self.__data, [0.25, 0.5, 0.75])
+        if np.iscomplexobj(quantiles):
+            raise Exception(
+                "This will never happen because NumPy already checks for this"
+            )
+        return quantiles
+
+    @property
+    def q1(self) -> Real:
+        return cast(Real, self.quantiles[0])
+
+    @property
+    def q3(self) -> Real:
+        return cast(Real, self.quantiles[2])
+
+    @property
+    def iqr(self) -> Real:
+        return cast(Real, self.q3 - self.q1)

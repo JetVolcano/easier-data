@@ -5,26 +5,22 @@ description = "Python package for managing data and plotting easier"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "filelock>=3.18.0",
-    "matplotlib>=3.10.3",
-    "numpy>=2.3.1",
-    "pandas>=2.3.1",
-    "scipy>=1.16.1",
+    "filelock>=3.20.3",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.1",
+    "pandas>=3.0.0",
+    "scipy>=1.17.0",
 ]
 
 [dependency-groups]
 dev = [
     "accurate-benchmark>=2.2.0",
     "jupyter>=1.1.1",
-    "ruff>=0.12.0",
-    "scipy-stubs>=1.16.1.0",
-    "sqlalchemy>=2.0.41",
+    "ruff>=0.14.14",
+    "scipy-stubs>=1.17.0.2",
+    "sqlalchemy>=2.0.46",
     "tabulate>=0.9.0",
 ]
-
-[project.optional-dependencies]
-db = ["sqlalchemy>=2.0.41"]
-
 
 [tool.ruff]
 respect-gitignore = false

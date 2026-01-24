@@ -9,6 +9,8 @@ T_co = TypeVar("T_co", covariant=True)
 
 type ArrayLike[T_co] = Sequence[T_co] | np.ndarray
 
+_INSTANCE_CHECK_ARRAYLIKE: Final[tuple[type, type]] = (Sequence, np.ndarray)
+
 type INT_TYPES = int | np.integer
 type FLOAT_TYPES = float | np.floating
 type COMPLEX_TYPES = complex | np.complexfloating
@@ -53,10 +55,11 @@ def _check_type(iterable: Iterable[Any], _type: Type | tuple[Type, ...]) -> bool
 
 
 __all__: list[str] = [
+    "_INSTANCE_CHECK_ARRAYLIKE",
     "_INSTANCE_CHECK_NUMBER",
     "_INSTANCE_CHECK_REAL",
     "ArrayLike",
     "Number",
     "Real",
-    "_check_type", 
+    "_check_type",
 ]
