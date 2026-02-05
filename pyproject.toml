@@ -7,14 +7,14 @@ requires-python = ">=3.14"
 dependencies = [
     "filelock>=3.20.3",
     "matplotlib>=3.10.8",
-    "numpy>=2.4.1",
+    "numpy>=2.4.2",
     "pandas>=3.0.0",
     "scipy>=1.17.0",
 ]
 
 [dependency-groups]
 dev = [
-    "accurate-benchmark>=2.2.0",
+    "accurate-benchmark>=3.0.2",
     "jupyter>=1.1.1",
     "ruff>=0.14.14",
     "scipy-stubs>=1.17.0.2",

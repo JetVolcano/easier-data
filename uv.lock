@@ -349,14 +349,14 @@ dev = [
 requires-dist = [
     { name = "filelock", specifier = ">=3.20.3" },
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "numpy", specifier = ">=2.4.2" },
     { name = "pandas", specifier = ">=3.0.0" },
     { name = "scipy", specifier = ">=1.17.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "accurate-benchmark", specifier = ">=2.2.0" },
+    { name = "accurate-benchmark", specifier = ">=3.0.2" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "ruff", specifier = ">=0.14.14" },
     { name = "scipy-stubs", specifier = ">=1.17.0.2" },
