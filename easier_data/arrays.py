@@ -76,9 +76,9 @@ class Array3D:
         self.__original_x: str = f"{x!r}"
         self.__original_y: str = f"{y!r}"
         self.__original_z: str = f"{z!r}"
-        self.__fig: Figure
-        self.__ax: Axes
-        self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
+        self.__fig: Figure | None
+        self.__ax: Axes | None
+        self.__fig, self.__ax = None, None
 
     def __repr__(self) -> str:
         return f"Array3D(x={self.__original_x}, y={self.__original_y}, z={self.__original_z})"
@@ -111,6 +111,11 @@ class Array3D:
         """
         Shows the current figure
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         self.__fig.show()
 
     def save(
@@ -136,6 +141,11 @@ class Array3D:
         ValueError
             Suffix is not supported.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
@@ -186,9 +196,9 @@ class Array2D:
         self.__points: np.ndarray = np.column_stack(cast(Sequence[ArrayLike], (x, y)))
         self.__original_x: str = f"{x!r}"
         self.__original_y: str = f"{y!r}"
-        self.__fig: Figure
-        self.__ax: Axes
-        self.__fig, self.__ax = plt.subplots()
+        self.__fig: Figure | None
+        self.__ax: Axes | None
+        self.__fig, self.__ax = None, None
 
     def __repr__(self) -> str:
         return f"Array2D(x={self.__original_x}, y={self.__original_y})"
@@ -254,6 +264,11 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.plot(self.x, self.y)
 
     def scatter(
@@ -284,6 +299,11 @@ class Array2D:
         PathCollection
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.scatter(
             self.x, self.y, s, c, marker=marker, alpha=alpha, cmap=cmap
         )
@@ -296,6 +316,11 @@ class Array2D:
         BarContainer
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.bar(self.x, self.y)
 
     def spline(self) -> list[Line2D]:
@@ -306,6 +331,11 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         CS: Final[CubicSpline[np.float64]] = CubicSpline(self.x, self.y)
         X: Final[np.ndarray] = np.linspace(self.x.min(), self.x.max(), 250)
         Y: Final[np.ndarray] = CS(X)
@@ -313,6 +343,11 @@ class Array2D:
 
     def show(self) -> None:
         """Shows the current figure."""
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         self.__fig.show()
 
     def save(
@@ -338,6 +373,11 @@ class Array2D:
         ValueError
             Suffix is not supported.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
@@ -383,9 +423,9 @@ class Array1D:
         NDArrayErrors.ARR1D(data)
         self.__data: np.ndarray = np.array(data)
         self.__original: str = f"{data!r}"
-        self.__fig: Figure
-        self.__ax: Axes
-        self.__fig, self.__ax = plt.subplots()
+        self.__fig: Figure | None
+        self.__ax: Axes | None
+        self.__fig, self.__ax = None, None
 
     def __repr__(self) -> str:
         return f"Array1D(data={self.__original})"
@@ -443,6 +483,11 @@ class Array1D:
         list[Line2D]
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.plot(self.__data)
 
     def bar(self) -> BarContainer:
@@ -453,6 +498,11 @@ class Array1D:
         BarContainer
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.bar(range(len(self.__data)), self.__data)
 
     def boxplot(self) -> dict[str, Any]:
@@ -463,10 +513,20 @@ class Array1D:
         dict[str, Any]
             The plotted figure.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         return self.__ax.boxplot(self.__data)
 
     def show(self) -> None:
         """Shows the current figure."""
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         self.__fig.show()
 
     def save(
@@ -492,6 +552,11 @@ class Array1D:
         ValueError
             Suffix is not supported.
         """
+        if self.__fig or self.__ax is None:
+            self.__fig, self.__ax = plt.subplots()
+            
+        self.__fig = cast(Figure, self.__fig)
+        self.__ax = cast(Axes, self.__ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
