@@ -111,7 +111,7 @@ class Array3D:
         """
         Shows the current figure
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
             
         self.__fig = cast(Figure, self.__fig)
@@ -141,7 +141,7 @@ class Array3D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
             
         self.__fig = cast(Figure, self.__fig)
@@ -264,7 +264,7 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -299,7 +299,7 @@ class Array2D:
         PathCollection
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -316,7 +316,7 @@ class Array2D:
         BarContainer
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -331,7 +331,7 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -343,7 +343,7 @@ class Array2D:
 
     def show(self) -> None:
         """Shows the current figure."""
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -373,7 +373,7 @@ class Array2D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -483,7 +483,7 @@ class Array1D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -498,7 +498,7 @@ class Array1D:
         BarContainer
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -513,7 +513,7 @@ class Array1D:
         dict[str, Any]
             The plotted figure.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -522,7 +522,7 @@ class Array1D:
 
     def show(self) -> None:
         """Shows the current figure."""
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)
@@ -552,7 +552,7 @@ class Array1D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig or self.__ax is None:
+        if self.__fig is None or self.__ax is None:
             self.__fig, self.__ax = plt.subplots()
             
         self.__fig = cast(Figure, self.__fig)

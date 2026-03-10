@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from typing import Any, Final, Type, TypeVar
+from typing import Any, Final, TypeVar
 
 import numpy as np
 
@@ -18,13 +18,13 @@ type COMPLEX_TYPES = complex | np.complexfloating
 type Real = INT_TYPES | FLOAT_TYPES
 type Number = INT_TYPES | FLOAT_TYPES | COMPLEX_TYPES
 
-_INSTANCE_CHECK_REAL: Final[tuple[Type, Type, Type, Type]] = (
+_INSTANCE_CHECK_REAL: Final[tuple[type, type, type, type]] = (
     int,
     float,
     np.integer,
     np.floating,
 )
-_INSTANCE_CHECK_NUMBER: Final[tuple[Type, Type, Type, Type, Type, Type]] = (
+_INSTANCE_CHECK_NUMBER: Final[tuple[type, type, type, type, type, type]] = (
     int,
     float,
     complex,
@@ -34,7 +34,7 @@ _INSTANCE_CHECK_NUMBER: Final[tuple[Type, Type, Type, Type, Type, Type]] = (
 )
 
 
-def _check_type(iterable: Iterable[Any], _type: Type | tuple[Type, ...]) -> bool:
+def _check_type(iterable: Iterable[Any], _type: type | tuple[type, ...]) -> bool:
     """Takes a given iterable and checks the type of the values inside to see if it matches the _type parameter
 
     Parameters
