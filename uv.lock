@@ -372,7 +372,7 @@ dev = [
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "ruff", specifier = ">=0.15.5" },
     { name = "scipy-stubs", specifier = ">=1.17.1.1" },
-    { name = "tabulate", specifier = ">=0.9.0" },
+    { name = "tabulate", specifier = ">=0.10.0" },
     { name = "ty", specifier = ">=0.0.21" },
 ]
 
