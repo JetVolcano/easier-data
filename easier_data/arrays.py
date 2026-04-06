@@ -70,37 +70,39 @@ class Array3D:
             If the arrays are not the same length.
         """
         NDArrayErrors.ARR3D(x, y, z)
-        self.__points: np.ndarray = np.column_stack(
-            cast(Sequence[ArrayLike], (x, y, z))
-        )
-        self.__original_x: str = f"{x!r}"
-        self.__original_y: str = f"{y!r}"
-        self.__original_z: str = f"{z!r}"
-        self.__fig: Figure | None
-        self.__ax: Axes | None
-        self.__fig, self.__ax = None, None
+        self._points: np.ndarray = np.column_stack(cast(Sequence[ArrayLike], (x, y, z)))
+        self._original_x: str = f"{x!r}"
+        self._original_y: str = f"{y!r}"
+        self._original_z: str = f"{z!r}"
+        self._fig: Figure | None = None
+        self._ax: Axes | None = None
 
     def __repr__(self) -> str:
-        return f"Array3D(x={self.__original_x}, y={self.__original_y}, z={self.__original_z})"
+        return (
+            f"Array3D(x={self._original_x}, y={self._original_y}, z={self._original_z})"
+        )
 
     def __str__(self) -> str:
-        return f"Array3D({self.__original_x}, {self.__original_y}, {self.__original_z})"
+        return f"Array3D({self._original_x}, {self._original_y}, {self._original_z})"
 
     @property
     def x(self) -> np.ndarray:
-        return self.__points[:, 0]
+        """1-Dimensional Data for the x-axis"""
+        return self._points[:, 0]
 
     @property
     def y(self) -> np.ndarray:
-        return self.__points[:, 1]
+        """1-Dimensional Data for the y-axis"""
+        return self._points[:, 1]
 
     @property
     def z(self) -> np.ndarray:
-        return self.__points[:, 2]
+        """1-Dimensional Data for the z-axis"""
+        return self._points[:, 2]
 
     @property
     def data(self) -> np.ndarray:
-        return self.__points
+        return self._points
 
     def plot(self): ...
     def bar(self): ...
@@ -111,12 +113,12 @@ class Array3D:
         """
         Shows the current figure
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        self.__fig.show()
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        self._fig.show()
 
     def save(
         self,
@@ -141,11 +143,11 @@ class Array3D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots(subplot_kw={"projection": "3d"})
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
@@ -165,7 +167,7 @@ class Array3D:
                 number += 1
             filename = f"figure_{number}.{suffix}"
             path: Path = dir / filename
-            self.__fig.savefig(path, transparent=transparent)
+            self._fig.savefig(path, transparent=transparent)
 
 
 class Array2D:
@@ -193,68 +195,69 @@ class Array2D:
             If the arrays are not the same length.
         """
         NDArrayErrors.ARR2D(x, y)
-        self.__points: np.ndarray = np.column_stack(cast(Sequence[ArrayLike], (x, y)))
-        self.__original_x: str = f"{x!r}"
-        self.__original_y: str = f"{y!r}"
-        self.__fig: Figure | None
-        self.__ax: Axes | None
-        self.__fig, self.__ax = None, None
+        self._points: np.ndarray = np.column_stack(cast(Sequence[ArrayLike], (x, y)))
+        self._original_x: str = f"{x!r}"
+        self._original_y: str = f"{y!r}"
+        self._fig: Figure | None = None
+        self._ax: Axes | None = None
 
     def __repr__(self) -> str:
-        return f"Array2D(x={self.__original_x}, y={self.__original_y})"
+        return f"Array2D(x={self._original_x}, y={self._original_y})"
 
     def __str__(self) -> str:
-        return f"Array2D({self.__original_x}, {self.__original_y})"
+        return f"Array2D({self._original_x}, {self._original_y})"
 
     def __hash__(self) -> int:
-        return hash(tuple(self.__points.tolist()))
+        return hash(tuple(self._points.tolist()))
 
     def array_equal(self, other: ArrayLike) -> bool:
         if not isinstance(other, self.__class__):
-            return np.array_equal(self.__points, other)
-        return np.array_equal(self.__points, other.__points)
+            return np.array_equal(self._points, other)
+        return np.array_equal(self._points, other._points)
 
     def __eq__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points == other
-        return self.__points == other.__points
+            return self._points == other
+        return self._points == other._points
 
     def __ne__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points == other
-        return self.__points != other.__points
+            return self._points == other
+        return self._points != other._points
 
     def __gt__(self, other: Array2D) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points > other
-        return self.__points > other.__points
+            return self._points > other
+        return self._points > other._points
 
     def __ge__(self, other: Array2D) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points >= other
-        return self.__points >= other.__points
+            return self._points >= other
+        return self._points >= other._points
 
     def __lt__(self, other: Array2D) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points < other
-        return self.__points < other.__points
+            return self._points < other
+        return self._points < other._points
 
     def __le__(self, other: Array2D) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__points <= other
-        return self.__points <= other.__points
+            return self._points <= other
+        return self._points <= other._points
 
     @property
     def x(self) -> np.ndarray:
-        return self.__points[:, 0]
+        """1-Dimensional Data for the x-axis"""
+        return self._points[:, 0]
 
     @property
     def y(self) -> np.ndarray:
-        return self.__points[:, 1]
+        """1-Dimensional Data for the y-axis"""
+        return self._points[:, 1]
 
     @property
     def data(self) -> np.ndarray:
-        return self.__points
+        return self._points
 
     def plot(self) -> list[Line2D]:
         """Creates a line plot of the data.
@@ -264,12 +267,12 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.plot(self.x, self.y)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.plot(self.x, self.y)
 
     def scatter(
         self,
@@ -299,14 +302,14 @@ class Array2D:
         PathCollection
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.scatter(
-            self.x, self.y, s, c, marker=marker, alpha=alpha, cmap=cmap
-        )
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.scatter(
+                self.x, self.y, s, c, marker=marker, alpha=alpha, cmap=cmap
+            )
 
     def bar(self) -> BarContainer:
         """Creates a bar plot of the data.
@@ -316,12 +319,12 @@ class Array2D:
         BarContainer
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.bar(self.x, self.y)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.bar(self.x, self.y)
 
     def spline(self) -> list[Line2D]:
         """Creates a spline chart of the data.
@@ -331,24 +334,22 @@ class Array2D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
         CS: Final[CubicSpline[np.float64]] = CubicSpline(self.x, self.y)
         X: Final[np.ndarray] = np.linspace(self.x.min(), self.x.max(), 250)
         Y: Final[np.ndarray] = CS(X)
-        return self.__ax.plot(X, Y)
+        return self._ax.plot(X, Y)
 
     def show(self) -> None:
         """Shows the current figure."""
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        self.__fig.show()
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig.show()
 
     def save(
         self,
@@ -373,11 +374,11 @@ class Array2D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
@@ -397,7 +398,7 @@ class Array2D:
                 number += 1
             filename = f"figure_{number}.{suffix}"
             path: Path = dir / filename
-            self.__fig.savefig(path, transparent=transparent)
+            self._fig.savefig(path, transparent=transparent)
 
 
 class Array1D:
@@ -421,59 +422,60 @@ class Array1D:
             If any of the arrays are empty.
         """
         NDArrayErrors.ARR1D(data)
-        self.__data: np.ndarray = np.array(data)
-        self.__original: str = f"{data!r}"
-        self.__fig: Figure | None
-        self.__ax: Axes | None
-        self.__fig, self.__ax = None, None
+        self._data: np.ndarray = np.array(data)
+        self._original: str = f"{data!r}"
+        self._fig: Figure | None
+        self._ax: Axes | None
+        self._fig, self._ax = None, None
 
     def __repr__(self) -> str:
-        return f"Array1D(data={self.__original})"
+        return f"Array1D(data={self._original})"
 
     def __str__(self) -> str:
-        return f"Array1D({self.__original})"
+        return f"Array1D({self._original})"
 
     def __hash__(self) -> int:
-        return hash(tuple(self.__data.tolist()))
+        return hash(tuple(self._data.tolist()))
 
     def array_equal(self, other: ArrayLike) -> bool:
         if not isinstance(other, self.__class__):
-            return np.array_equal(self.__data, other)
-        return np.array_equal(self.__data, other.__data)
+            return np.array_equal(self._data, other)
+        return np.array_equal(self._data, other._data)
 
     def __eq__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data == other
-        return self.__data == other.__data
+            return self._data == other
+        return self._data == other._data
 
     def __ne__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data == other
-        return self.__data != other.__data
+            return self._data == other
+        return self._data != other._data
 
     def __gt__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data > other
-        return self.__data > other.__data
+            return self._data > other
+        return self._data > other._data
 
     def __ge__(self, other: Array1D) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data >= other
-        return self.__data >= other.__data
+            return self._data >= other
+        return self._data >= other._data
 
     def __lt__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data < other
-        return self.__data < other.__data
+            return self._data < other
+        return self._data < other._data
 
     def __le__(self, other: Any) -> Any:
         if not isinstance(other, self.__class__):
-            return self.__data <= other
-        return self.__data <= other.__data
+            return self._data <= other
+        return self._data <= other._data
 
     @property
     def data(self) -> np.ndarray:
-        return self.__data
+        """1-Dimensional Data for the x-axis"""
+        return self._data
 
     def plot(self) -> list[Line2D]:
         """Creates a line plot of the data.
@@ -483,12 +485,12 @@ class Array1D:
         list[Line2D]
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.plot(self.__data)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.plot(self._data)
 
     def bar(self) -> BarContainer:
         """Creates a bar plot of the data.
@@ -498,12 +500,12 @@ class Array1D:
         BarContainer
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.bar(range(len(self.__data)), self.__data)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.bar(range(len(self._data)), self._data)
 
     def boxplot(self) -> dict[str, Any]:
         """Creates a boxplot of the data.
@@ -513,21 +515,19 @@ class Array1D:
         dict[str, Any]
             The plotted figure.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        return self.__ax.boxplot(self.__data)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
+        return self._ax.boxplot(self._data)
 
     def show(self) -> None:
         """Shows the current figure."""
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
-        self.__fig.show()
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig.show()
 
     def save(
         self,
@@ -552,11 +552,11 @@ class Array1D:
         ValueError
             Suffix is not supported.
         """
-        if self.__fig is None or self.__ax is None:
-            self.__fig, self.__ax = plt.subplots()
-            
-        self.__fig = cast(Figure, self.__fig)
-        self.__ax = cast(Axes, self.__ax)
+        if self._fig is None or self._ax is None:
+            self._fig, self._ax = plt.subplots()
+
+        self._fig = cast(Figure, self._fig)
+        self._ax = cast(Axes, self._ax)
         if suffix not in _FIGURE_FORMATS:
             raise ValueError(
                 f"Format: '{suffix}' is not supported, (supported formats: {', '.join(_FIGURE_FORMATS)})"
@@ -576,11 +576,11 @@ class Array1D:
                 number += 1
             filename = f"figure_{number}.{suffix}"
             path: Path = dir / filename
-            self.__fig.savefig(path, transparent=transparent)
+            self._fig.savefig(path, transparent=transparent)
 
     @property
     def mean(self) -> Real:
-        return self.__data.mean()
+        return self._data.mean()
 
     @property
     def avg(self) -> Real:
@@ -588,11 +588,11 @@ class Array1D:
 
     @property
     def median(self) -> np.floating[Any]:
-        return np.median(self.__data)
+        return np.median(self._data)
 
     @property
     def mode(self) -> "ModeResult":
-        return stats.mode(self.__data)
+        return stats.mode(self._data)
 
     @property
     def std(self) -> Real:
@@ -604,7 +604,7 @@ class Array1D:
 
     @property
     def quantiles(self) -> np.ndarray:
-        quantiles: np.ndarray = np.quantile(self.__data, [0.25, 0.5, 0.75])
+        quantiles: np.ndarray = np.quantile(self._data, [0.25, 0.5, 0.75])
         if np.iscomplexobj(quantiles):
             raise Exception(
                 "This will never happen because NumPy already checks for this"
