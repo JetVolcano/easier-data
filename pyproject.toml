@@ -20,7 +20,7 @@ dev = [
     "ruff>=0.15.15",
     "scipy-stubs>=1.17.1.5",
     "tabulate>=0.10.0",
-    "ty>=0.0.42",
+    "ty>=0.0.46",
 ]
 
 [tool.ruff]
