@@ -2,8 +2,6 @@
 
 **Copyright &copy; 2026 JetVolcano**
 
-> This license is subject to change.
-
 ## 1. Definitions
 
 - **Owner(s):**\
