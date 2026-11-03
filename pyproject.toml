@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "custom-warnings>=1.0.0",
-    "filelock>=4.2.4",
+    "filelock>=4.2.6",
     "matplotlib>=3.11.0",
     "numpy>=2.4.6",
     "pandas>=3.1.0",
